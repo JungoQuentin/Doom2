@@ -11,10 +11,11 @@ config_version=5
 [application]
 
 config/name="Doom2"
-run/main_scene="res://main.tscn"
+run/main_scene="uid://bvot1qpsbbms6"
 config/features=PackedStringArray("4.4", "Mobile")
 config/icon="res://icon.svg"
 
 [rendering]
 
 renderer/rendering_method="mobile"
+environment/defaults/default_clear_color=Color(1, 0.82, 0.871, 1)
