@@ -87,7 +87,7 @@ func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 	var current_center = source_coords;
 	while true:
 		for i in range(6):
-			var check_tile = current_center + Utils.vec_from_dir((spawn_dir + i) % 6);
+			var check_tile = Utils.moved_in_dir(current_center, (spawn_dir + i) % 6);
 			if not coords.has(check_tile):
 				var new_cell = Cell.new(check_tile, cell_type)
 				coords[check_tile] = new_cell;
@@ -96,7 +96,7 @@ func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 					place_to_insert = randi() % (len(cells) - 1) + 1;
 				cells.insert(place_to_insert, new_cell);
 				return
-		current_center += Utils.vec_from_dir(spawn_dir);
+		current_center = Utils.moved_in_dir(current_center, spawn_dir);
 
 
 func pos_to_tile(pos: Vector2) -> Vector2i:
@@ -133,7 +133,7 @@ func try_to_move_to_center(cell: Cell) -> void:
 	if cell.center == CENTER:
 		return
 	var direction = Utils.vec_to_direction(CENTER - cell.center)
-	var new_position = cell.center + Utils.vec_from_dir(direction)
+	var new_position = Utils.moved_in_dir(cell.center, direction)
 	if !coords.has(new_position):
 		move_cell(cell, new_position)
 
@@ -152,7 +152,7 @@ func set_can_merge():
 
 func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_neighbourgs: Array[Cell], dbg_rec_level:= 0) :
 	var new_positions = Utils.ALL_DIRECTION \
-		.map(func(dir): return cell.center + Utils.vec_from_dir(dir)) \
+		.map(func(dir): return Utils.moved_in_dir(cell.center, dir)) \
 		.filter(func(pos):return coords.has(pos) and cell_list.has(coords[pos]))
 
 	var added_cells_to_check: Array[Cell] = []

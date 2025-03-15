@@ -37,22 +37,6 @@ static func vec_to_direction(vec: Vector2i) -> Direction:
 	else:
 		return Direction.Right
 
-static func vec_from_dir(dir: Direction) -> Vector2i:
-	match dir:
-		Direction.TopLeft: 
-			return Vector2i(0, -1)
-		Direction.TopRight: 
-			return Vector2i(1, -1)
-		Direction.Left: 
-			return Vector2i(-1, 0)
-		Direction.Right: 
-			return Vector2i(1, 0)
-		Direction.BottomLeft: 
-			return Vector2i(0, 1)
-		Direction.BottomRight: 
-			return Vector2i(1, 1)
-	return Vector2i(0, 0) # TODO crash
-
 
 static func moved_in_dir(start: Vector2i, dir: Direction) -> Vector2i:
 	match dir:
