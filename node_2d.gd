@@ -85,8 +85,8 @@ func _draw() -> void:
 			var color = type1_color
 			if cell.center == mouse_tile:
 				color = color.lightened(0.2)
-			elif cell.can_merge:
-				color = color.darkened(0.5)
+			if cell.can_merge:
+				color = color.darkened(0.1)
 			draw_circle(pos, h/2 * overh, color, true)
 			draw_circle(pos, h/2 * overh, type1_color.darkened(0.2), false, 2)
 		elif  cell.cell_type == Cell.CellType.TYPE2:
@@ -105,8 +105,24 @@ func merge() -> void:
 		if cell.cell_type == Cell.CellType.TYPE1:
 			coords.erase(cell.center)
 			cells.remove_at(cells.find(cell))
-		elif cell.cell_type == Cell.CellType.TYPE1:
+		elif cell.cell_type == Cell.CellType.TYPE2:
 			pass
+	
+	for cell in mergeable_cells:
+		if not check_if_coolide_with_type2(cell):
+			var new_cell = Cell.new(cell.center, Cell.CellType.TYPE2)
+			coords[cell.center] = new_cell;
+			var place_to_insert = 1;
+			if len(cells) > 1:
+				place_to_insert = randi() % (len(cells) - 1) + 1;
+			cells.insert(place_to_insert, new_cell);
+			return
+
+func check_if_coolide_with_type2(cell: Cell) -> bool:
+	for i in range(6):
+		if coords.has(Utils.moved_in_dir(cell.center, i)):
+			return true
+	return false
 
 
 func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
