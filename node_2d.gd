@@ -114,6 +114,8 @@ func move_cell(cell: Cell, new_position: Vector2i) -> void:
 func try_to_move_to_center(cell: Cell) -> void:
 	if cell.cell_type != Cell.CellType.TYPE1:
 		return # TODO calcul different
+	if cell.center == CENTER:
+		return
 	var direction = Utils.vec_to_direction(CENTER - cell.center)
 	var new_position = cell.center + Utils.vec_from_dir(direction)
 	if !coords.has(new_position):
