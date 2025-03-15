@@ -1,7 +1,5 @@
 extends Node2D
 
-enum CellType{ TYPE1, TYPE2 }
-
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 40.0; # Cell size
 const overh: float = 1;
@@ -15,20 +13,6 @@ var cells: Array[Cell] = [Cell.new(Vector2i(5, 5), CellType.TYPE1)];
 var mouse_tile: Vector2i;
 
 
-class Cell:
-	var center: Vector2i;
-	var cell_type: CellType;
-	func _init(center: Vector2i, cell_type: CellType):
-		self.center = center;
-		self.cell_type = cell_type;
-
-
-func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		print("left click", mouse_tile)
-	if event is InputEventMouseMotion:
-		mouse_tile = pos2tile(event.position);
-		print("move", event.position)
 
 func _draw() -> void:
 	for cell in cells:
