@@ -10,7 +10,7 @@ const type1_color: Color = Color.LIGHT_PINK;
 const type2_color: Color = Color.LIGHT_SALMON;
 
 # Stores the coods (Vec2) of every filled tile
-var coords: Dictionary[Vector2i, Cell.CellType] = {Vector2i(5, 5): Cell.CellType.TYPE1};
+var coords: Dictionary[Vector2i, Cell]
 # List of the type (int) and center coords (Vec2) of cells
 # order matters for rendering
 var cells: Array[Cell] = [Cell.new(Vector2i(5, 5), Cell.CellType.TYPE1)];
@@ -98,9 +98,10 @@ func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 		for i in range(6):
 			var check_tile = current_center + Utils.vec_from_dir((spawn_dir + i) % 6);
 			if not coords.has(check_tile):
-				coords[check_tile] = cell_type;
+				var new_cell = Cell.new(check_tile, cell_type)
+				coords[check_tile] = new_cell;
 				var place_to_insert = randi() % len(cells);
-				cells.insert(place_to_insert, Cell.new(check_tile, cell_type));
+				cells.insert(place_to_insert, new_cell);
 				return
 		current_center += Utils.vec_from_dir(spawn_dir);
 
@@ -128,7 +129,7 @@ func start_auto_move_to_center() -> void:
 ## Bouge une cellule vers sa new_position
 func move_cell(cell: Cell, new_position: Vector2i) -> void:
 	coords.erase(cell.center)
-	coords[new_position] = cell.cell_type
+	coords[new_position] = cell
 	cell.center = new_position
 	queue_redraw()
 
@@ -136,6 +137,8 @@ func move_cell(cell: Cell, new_position: Vector2i) -> void:
 func try_to_move_to_center(cell: Cell) -> void:
 	if cell.cell_type != Cell.CellType.TYPE1:
 		return # TODO calcul different
+	if cell.center == CENTER:
+		return
 	var direction = Utils.vec_to_direction(CENTER - cell.center)
 	var new_position = cell.center + Utils.vec_from_dir(direction)
 	if !coords.has(new_position):
