@@ -25,12 +25,12 @@ func _input(event: InputEvent) -> void:
 			queue_redraw()
 
 func _draw() -> void:
-	"""
+	
 	for i in range(10):
 		for j in range(10):
-			var pos = tile2pos(Vector2i(i, j))
+			var pos = tile_to_pos(Vector2i(i, j))
 			draw_circle(pos, h/2 * overh, Color.PALE_VIOLET_RED.lightened(0.6), false, 2)
-	"""
+	
 	for cell in cells:
 		var pos = tile_to_pos(cell.center)
 		if cell.center == mouse_tile:
@@ -44,15 +44,17 @@ func _draw() -> void:
 
 func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 	var spawn_dir = randi() % 6; # Choose 1 of 6 random directions (spawn_dir)
-	
-	# Check is cell in 1 * spawn_dir is empty with hasmap "coords"
-	# If not, check the 5 others cells
-	# If still empty, check 2 * spawn_dir
-	# ... reapete until find an empty cell
-	# add coords of all taken cells in "coords"
-	# add (center_coords, cell_type) at a random id in cells
+	var current_center = source_coords;
+	while true:
+		for i in range(6):
+			var check_tile = current_center + Utils.vec_from_dir((spawn_dir + i) % 6);
+			if not coords.has(check_tile):
+				coords[check_tile] = cell_type;
+				var place_to_insert = randi() % len(cells);
+				cells.insert(place_to_insert, Cell.new(check_tile, cell_type));
+				return
+		current_center += Utils.vec_from_dir(spawn_dir);
 
-	pass
 
 func pos_to_tile(pos: Vector2) -> Vector2i:
 	var odd = int(pos.y / h - 0.5) % 2
