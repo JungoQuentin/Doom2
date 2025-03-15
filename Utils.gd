@@ -61,5 +61,4 @@ static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
 			result[cell.center] = cell
 		else:
 			pass # TODO logique de detetion de tous les tiles que rempli une grosse cell
-	#print(result)
 	return result

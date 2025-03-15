@@ -53,7 +53,6 @@ func _input(event: InputEvent) -> void:
 		mouse_tile = pos_to_tile(get_global_mouse_position());
 		if coords.has(mouse_tile):
 			var cell = coords[mouse_tile];
-			print(cell)
 			if cell.can_merge:
 				merge()
 			elif cell.cell_type == Cell.CellType.TYPE1:
@@ -69,8 +68,9 @@ func _input(event: InputEvent) -> void:
 			queue_redraw()
 
 
-func _physics_process(delta: float) -> void:
-	set_can_merge()
+func _physics_process(_delta: float) -> void:
+	set_can_merge(Cell.CellType.TYPE1)
+	#set_can_merge(Cell.CellType.TYPE2)
 
 
 func _draw() -> void:
@@ -181,9 +181,12 @@ func try_to_move_to_center(cell: Cell) -> void:
 		move_cell(cell, new_position)
 
 ## Set can_merge on all the cells of the first mergeable group
-func set_can_merge():
+func set_can_merge(type: Cell.CellType):
 	var cell_list: Array[Cell] = cells.duplicate(true)
-	var first_cell: Cell = cell_list.pop_front()
+	var first_cell_i = cell_list.find_custom(func(cell): return cell.cell_type == type)
+	if first_cell_i == -1:
+		return
+	var first_cell: Cell = cell_list[first_cell_i]
 	var merge_neighbourgs: Array[Cell] = []
 	get_recursive_merge_neighbours(first_cell, cell_list, merge_neighbourgs)
 	if len(merge_neighbourgs) + 1 < Cell.CELLS_N_FOR_TYPE2:

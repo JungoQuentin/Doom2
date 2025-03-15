@@ -9,9 +9,9 @@ var cell_type: CellType;
 var childs: Array[Vector2i];
 var can_merge: bool;
 
-func _init(center: Vector2i, cell_type: CellType):
-	self.center = center;
-	self.cell_type = cell_type;
+func _init(_center: Vector2i, _cell_type: CellType):
+	self.center = _center;
+	self.cell_type = _cell_type;
 	self.childs = [];
 	if cell_type == CellType.TYPE2:
 		for i in range(6): self.childs.append(Utils.moved_in_dir(center, i));
