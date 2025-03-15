@@ -41,12 +41,12 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		mouse_tile = pos_to_tile(event.position);
+		mouse_tile = pos_to_tile(get_global_mouse_position());
 		if coords.has(mouse_tile):
 			spawn_cell(mouse_tile, Cell.CellType.TYPE1)
 			queue_redraw()
 	if event is InputEventMouseMotion:
-		var new_mouse_tile = pos_to_tile(event.position);
+		var new_mouse_tile = pos_to_tile(get_global_mouse_position());
 		if new_mouse_tile != mouse_tile:
 			mouse_tile = new_mouse_tile;
 			queue_redraw()
@@ -65,12 +65,13 @@ func _draw() -> void:
 		else:
 			draw_circle(pos, h/2 * overh, Color.LIGHT_PINK, true)
 		draw_circle(pos, h/2 * overh, Color.LIGHT_PINK.darkened(0.2), false, 2)
+	
+	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
 
 func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
-	var dir_num = randi() % 6;
-	print(dir_num)
-	# Choose 1 of 6 random directions (spawn_dir)
+	var spawn_dir = randi() % 6; # Choose 1 of 6 random directions (spawn_dir)
+	
 	# Check is cell in 1 * spawn_dir is empty with hasmap "coords"
 	# If not, check the 5 others cells
 	# If still empty, check 2 * spawn_dir
@@ -81,8 +82,8 @@ func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 	pass
 
 func pos_to_tile(pos: Vector2) -> Vector2i:
-	var odd = int(pos.y / h) % 2
-	return Vector2i((pos.x / h / hex_ratio - 1 - 2/3.0 - odd/3.0), (pos.y / h) - 1.9)
+	var odd = int(pos.y / h - 0.5) % 2
+	return Vector2i((pos.x / h / hex_ratio + 0.08 + odd*0.37), (pos.y / h) + 0.5)
 
 func tile_to_pos(tile_coords: Vector2i) -> Vector2:
 	var odd = tile_coords.y % 2;

@@ -6,4 +6,3 @@
 script = ExtResource("1_wtcfe")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(478, 232)
