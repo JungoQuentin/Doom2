@@ -2,9 +2,12 @@ class_name Cell
 
 enum CellType{ TYPE1, TYPE2 }
 
+const CELLS_N_FOR_TYPE2 = 7
+
 var center: Vector2i;
 var cell_type: CellType;
 var childs: Array[Vector2i];
+var can_merge: bool;
 
 func _init(center: Vector2i, cell_type: CellType):
 	self.center = center;
@@ -12,3 +15,4 @@ func _init(center: Vector2i, cell_type: CellType):
 	self.childs = [];
 	if cell_type == CellType.TYPE2:
 		for i in range(6): self.childs.append(center + Utils.vec_from_dir(i));
+	self.can_merge = false;

@@ -9,6 +9,15 @@ enum Direction {
 	BottomRight,
 }
 
+const ALL_DIRECTION: Array[Direction] = [
+	Direction.TopLeft,
+	Direction.TopRight,
+	Direction.Left,
+	Direction.Right,
+	Direction.BottomLeft,
+	Direction.BottomRight,
+]
+
 ## angle as degree
 static func vec_to_direction(vec: Vector2i) -> Direction:
 	var angle = rad_to_deg(Vector2(vec).angle())
