@@ -2,7 +2,11 @@ class_name Cell
 
 enum CellType{ TYPE1, TYPE2 }
 
-const CELLS_N_FOR_TYPE2 = 7
+## Nombre de cellule qu'il faut pour passer au type suivant
+const N_CELL_FOR_TYPE: Dictionary[CellType, int] = {
+	CellType.TYPE1: 7,
+	CellType.TYPE2: 4,
+}
 
 var center: Vector2i;
 var cell_type: CellType;

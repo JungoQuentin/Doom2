@@ -49,7 +49,7 @@ func _input(event: InputEvent) -> void:
 		if coords.has(mouse_tile):
 			var cell = coords[mouse_tile];
 			if cell.can_merge:
-				merge()
+				merge(cell.cell_type)
 			elif cell.cell_type == Cell.CellType.TYPE1:
 				spawn_cell(mouse_tile, Cell.CellType.TYPE1)
 			elif cell.cell_type == Cell.CellType.TYPE2:
@@ -65,7 +65,7 @@ func _input(event: InputEvent) -> void:
 
 func _physics_process(_delta: float) -> void:
 	set_can_merge(Cell.CellType.TYPE1)
-	#set_can_merge(Cell.CellType.TYPE2)
+	set_can_merge(Cell.CellType.TYPE2)
 
 
 func _draw() -> void:
@@ -88,34 +88,44 @@ func _draw() -> void:
 			var color = type2_color
 			if cell.center == mouse_tile or mouse_tile in cell.childs:
 				color = color.lightened(0.2)
+			if cell.can_merge:
+				color = color.darkened(0.1)
 			draw_circle(pos, h/2 * 3 * overh_type2, color, true)
 			draw_circle(pos, h/2 * 3 * overh_type2, type2_color.darkened(0.2), false, 2)
 
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
-func merge() -> void:
-	var mergeable_cells: Array[Cell] = cells.filter(func(cell): return cell.can_merge)
-
+func merge(type: Cell.CellType) -> void:
+	var mergeable_cells: Array[Cell] = cells.filter(func(cell): return cell.can_merge and cell.cell_type == type)
+	
 	for cell in mergeable_cells:
-		if cell.cell_type == Cell.CellType.TYPE1:
-			coords.erase(cell.center)
-			cells.remove_at(cells.find(cell))
-		elif cell.cell_type == Cell.CellType.TYPE2:
+		match type:
+			Cell.CellType.TYPE1:
+				coords.erase(cell.center)
+				cells.remove_at(cells.find(cell))
+			Cell.CellType.TYPE2:
+				for child in cell.childs:
+					coords.erase(child)
+				coords.erase(cell.center)
+				cells.remove_at(cells.find(cell))
+	
+	match type:
+		Cell.CellType.TYPE1:
+			for cell in mergeable_cells:
+				if not check_if_coolide_with_type2(cell):
+					var new_cell = Cell.new(cell.center, Cell.CellType.TYPE2)
+					coords[cell.center] = new_cell;
+					for cell_child in new_cell.childs: coords[cell_child] = new_cell;
+					if cells.is_empty():
+						cells.append(new_cell);
+						return
+					var place_to_insert = 1;
+					if len(cells) > 1:
+						place_to_insert = randi() % (len(cells) - 1) + 1;
+					cells.insert(place_to_insert, new_cell);
+					return
+		Cell.CellType.TYPE2:
 			pass
-
-	for cell in mergeable_cells:
-		if not check_if_coolide_with_type2(cell):
-			var new_cell = Cell.new(cell.center, Cell.CellType.TYPE2)
-			coords[cell.center] = new_cell;
-			for cell_child in new_cell.childs: coords[cell_child] = new_cell;
-			if cells.is_empty():
-				cells.append(new_cell);
-				return
-			var place_to_insert = 1;
-			if len(cells) > 1:
-				place_to_insert = randi() % (len(cells) - 1) + 1;
-			cells.insert(place_to_insert, new_cell);
-			return
 
 func check_if_coolide_with_type2(cell: Cell) -> bool:
 	for i in range(6):
@@ -181,38 +191,39 @@ func try_to_move_to_center(cell: Cell) -> void:
 
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge(type: Cell.CellType):
-	if cells.is_empty():
+	var cell_list: Array[Cell] = cells.filter(func(cell): return cell.cell_type == type)
+	if cell_list.is_empty():
 		return
-	var cell_list: Array[Cell] = cells.duplicate(true)
-	var first_cell_i = cell_list.find_custom(func(cell): return cell.cell_type == type)
-	if first_cell_i == -1:
-		return
-	var first_cell: Cell = cell_list[first_cell_i]
+	var first_cell: Cell = cell_list.pop_front()
 	var merge_neighbourgs: Array[Cell] = []
-	get_recursive_merge_neighbours(first_cell, cell_list, merge_neighbourgs)
-	if len(merge_neighbourgs) + 1 < Cell.CELLS_N_FOR_TYPE2:
+	match type:
+		Cell.CellType.TYPE1:
+			get_recursive_merge_neighbours(first_cell, cell_list, merge_neighbourgs)
+		Cell.CellType.TYPE2:
+			get_recursive_merge_neighbours_type2(first_cell, cell_list, merge_neighbourgs)
+	if len(merge_neighbourgs) + 1 < Cell.N_CELL_FOR_TYPE[type]:
 		return # not enought neighbourgs
 	first_cell.can_merge = true
 	for cell in merge_neighbourgs:
 		cell.can_merge = true
 
-
 func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_neighbourgs: Array[Cell], dbg_rec_level:= 0) :
-	var new_positions = Utils.ALL_DIRECTION \
+	var new_cells = Utils.ALL_DIRECTION \
 		.map(func(dir): return Utils.moved_in_dir(cell.center, dir)) \
-		.filter(func(pos): return coords.has(pos) and cell_list.has(coords[pos]) and coords[pos].cell_type == cell.cell_type)
+		.filter(func(pos): return coords.has(pos) and cell_list.has(coords[pos])) \
+		.map(func(pos): return coords[pos])
 
 	var added_cells_to_check: Array[Cell] = []
 
-	for pos in new_positions:
-		cell_list.remove_at(cell_list.find(coords[pos]))
-		merge_neighbourgs.push_back(coords[pos])
-		added_cells_to_check.push_back(coords[pos])
-		if len(merge_neighbourgs) + 1 >= Cell.CELLS_N_FOR_TYPE2:
+	for new_cell in new_cells:
+		cell_list.remove_at(cell_list.find(new_cell))
+		merge_neighbourgs.push_back(new_cell)
+		added_cells_to_check.push_back(new_cell)
+		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
 			return
 
 	for new_cell in added_cells_to_check:
-		if len(merge_neighbourgs) + 1 >= Cell.CELLS_N_FOR_TYPE2:
+		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
 			return
 		get_recursive_merge_neighbours(
 			new_cell,
@@ -220,5 +231,36 @@ func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_ne
 			merge_neighbourgs,
 			dbg_rec_level + 1
 		)
-		if len(merge_neighbourgs) + 1 >= Cell.CELLS_N_FOR_TYPE2:
+		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
+			return
+
+## Pour le type2, je dois detecter les enfants allentours, et voir leur parent
+func get_recursive_merge_neighbours_type2(cell: Cell, cell_list: Array[Cell], merge_neighbourgs: Array[Cell], dbg_rec_level:= 0) :
+	var new_cells_to_check: Array[Cell] = []
+	for child in cell.childs:
+		for dir in Utils.ALL_DIRECTION:
+			var pos = Utils.moved_in_dir(child, dir)
+			## avec le coords[pos], je get direct le parent, meme si je suis sur la pos de l'enfant
+			if coords.has(pos) and cell_list.has(coords[pos]):
+				new_cells_to_check.push_back(coords[pos])
+	
+	var added_cells_to_check: Array[Cell] = []
+	
+	for new_cell in new_cells_to_check:
+		cell_list.remove_at(cell_list.find(new_cell))
+		merge_neighbourgs.push_back(new_cell)
+		added_cells_to_check.push_back(new_cell)
+		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
+			return
+	
+	for new_cell in added_cells_to_check:
+		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
+			return
+		get_recursive_merge_neighbours_type2(
+			new_cell,
+			cell_list,
+			merge_neighbourgs,
+			dbg_rec_level + 1
+		)
+		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
 			return
