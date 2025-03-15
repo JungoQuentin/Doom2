@@ -4,8 +4,8 @@ const CENTER:= Vector2i(1_000, 1_000)
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
 const overh_type1: float = 1.33;
-const overh_type2: float = 1.15;
-const cam_smoothing: float = 0.002;
+const overh_type2: float = 1.2;
+const cam_smoothing: float = 0.005;
 
 const type1_color: Color = Color.LIGHT_PINK;
 const type2_color: Color = Color.LIGHT_SALMON;
@@ -104,7 +104,7 @@ func merge() -> void:
 			pass
 
 	for cell in mergeable_cells:
-		if not check_if_coolide_with_type2(cell):
+		if not Utils.are_there_cells_around(cell.center, coords):
 			var new_cell = Cell.new(cell.center, Cell.CellType.TYPE2)
 			coords[cell.center] = new_cell;
 			for cell_child in new_cell.childs: coords[cell_child] = new_cell;
@@ -116,12 +116,6 @@ func merge() -> void:
 				place_to_insert = randi() % (len(cells) - 1) + 1;
 			cells.insert(place_to_insert, new_cell);
 			return
-
-func check_if_coolide_with_type2(cell: Cell) -> bool:
-	for i in range(6):
-		if coords.has(Utils.moved_in_dir(cell.center, i)):
-			return true
-	return false
 
 
 func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
@@ -163,21 +157,39 @@ func start_auto_move_to_center() -> void:
 
 ## Bouge une cellule vers sa new_position
 func move_cell(cell: Cell, new_position: Vector2i) -> void:
-	coords.erase(cell.center)
-	coords[new_position] = cell
-	cell.center = new_position
+	if cell.cell_type == Cell.CellType.TYPE1:
+		coords.erase(cell.center)
+		coords[new_position] = cell
+		cell.center = new_position
+	elif cell.cell_type == Cell.CellType.TYPE2:
+		coords.erase(cell.center)
+		for i in range(6):
+			coords.erase(Utils.moved_in_dir(cell.center, i))
+		coords[new_position] = cell
+		for i in range(6):
+			coords[Utils.moved_in_dir(cell.center, i)] = cell
+		cell.center = new_position
+		cell.childs.clear()
+		for i in range(6):
+			cell.childs.append(Utils.moved_in_dir(cell.center, i))
 	queue_redraw()
 
 ## Bouge une cellule vers le centre si possible
 func try_to_move_to_center(cell: Cell) -> void:
-	if cell.cell_type != Cell.CellType.TYPE1:
-		return # TODO calcul different
 	if cell.center == CENTER:
 		return
-	var direction = Utils.vec_to_direction(CENTER - cell.center)
-	var new_position = Utils.moved_in_dir(cell.center, direction)
-	if !coords.has(new_position):
-		move_cell(cell, new_position)
+	var angle = rad_to_deg(Vector2(CENTER - cell.center).angle());
+	angle += (randf() - 0.5) * 90;
+	var direction = Utils.angle_to_direction(angle);
+	
+	if cell.cell_type == Cell.CellType.TYPE1:
+		var new_position = Utils.moved_in_dir(cell.center, direction)
+		if !coords.has(new_position):
+			move_cell(cell, new_position)
+	elif cell.cell_type == Cell.CellType.TYPE2:
+		var new_position = Utils.moved_in_dir(cell.center, direction)
+		if not Utils.are_there_type2_cells_around(new_position, coords):
+			move_cell(cell, new_position)
 
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge(type: Cell.CellType):

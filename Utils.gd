@@ -19,8 +19,7 @@ const ALL_DIRECTION: Array[Direction] = [
 ]
 
 ## angle as degree
-static func vec_to_direction(vec: Vector2i) -> Direction:
-	var angle = rad_to_deg(Vector2(vec).angle())
+static func angle_to_direction(angle: float) -> Direction:
 	angle = float(roundi(angle + 360) % 360) + 30
 	if angle >= 0 and angle <= 60:
 		return Direction.Right
@@ -54,6 +53,7 @@ static func moved_in_dir(start: Vector2i, dir: Direction) -> Vector2i:
 			return start + Vector2i(start.y % 2, 1)
 	return Vector2i(0, 0) # TODO crash
 
+
 static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
 	var result: Dictionary[Vector2i, Cell] = {}
 	for cell in base:
@@ -62,3 +62,18 @@ static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
 		else:
 			pass # TODO logique de detetion de tous les tiles que rempli une grosse cell
 	return result
+
+
+static func are_there_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell]) -> bool:
+	for i in range(6):
+		if coords.has(moved_in_dir(pos, i)):
+			return true
+	return false
+
+
+static func are_there_type2_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell]) -> bool:
+	for i in range(6):
+		if coords.has(moved_in_dir(pos, i)):
+			if coords[moved_in_dir(pos, i)].cell_type == Cell.CellType.TYPE2:
+				return true
+	return false
