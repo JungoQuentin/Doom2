@@ -5,27 +5,18 @@ const h: float = 40.0; # Cell size
 const overh: float = 1;
 
 # Stores the coods (Vec2) of every filled tile
-var coords: Dictionary[Vector2i, CellType] = {Vector2i(5, 5): CellType.TYPE1};
+var coords: Dictionary[Vector2i, Cell.CellType] = {Vector2i(5, 5): Cell.CellType.TYPE1};
 # List of the type (int) and center coords (Vec2) of cells
 # order matters for rendering
-var cells: Array[Cell] = [Cell.new(Vector2i(5, 5), CellType.TYPE1)];
+var cells: Array[Cell] = [Cell.new(Vector2i(5, 5), Cell.CellType.TYPE1)];
 # Coords of the tile under the mouse cursor
 var mouse_tile: Vector2i;
-
-
-class Cell:
-	var center: Vector2i;
-	var cell_type: CellType;
-	func _init(center: Vector2i, cell_type: CellType):
-		self.center = center;
-		self.cell_type = cell_type;
-
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		mouse_tile = pos_to_tile(event.position);
 		if coords.has(mouse_tile):
-			spawn_cell(mouse_tile, CellType.TYPE1)
+			spawn_cell(mouse_tile, Cell.CellType.TYPE1)
 			queue_redraw()
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(event.position);
@@ -49,7 +40,7 @@ func _draw() -> void:
 		draw_circle(pos, h/2 * overh, Color.LIGHT_PINK.darkened(0.2), false, 2)
 
 
-func spawn_cell(source_coords: Vector2i, cell_type: CellType):
+func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 	var dir_num = randi() % 6;
 	print(dir_num)
 	# Choose 1 of 6 random directions (spawn_dir)
