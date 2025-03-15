@@ -3,11 +3,14 @@ extends Node2D
 const CENTER:= Vector2i(1_000, 1_000)
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
-const overh: float = 1.2;
+const overh: float = 1.33;
 const cam_smoothing: float = 0.002;
 
 const type1_color: Color = Color.LIGHT_PINK;
 const type2_color: Color = Color.LIGHT_SALMON;
+
+# Number of type1 cells spawned from type2 cell
+const nb_type2_spawn: int = 3;
 
 # Stores the coods (Vec2) of every filled tile
 var coords: Dictionary[Vector2i, Cell]
@@ -25,6 +28,13 @@ func _ready() -> void:
 	cells.shuffle()
 	coords = Utils.cells_list_to_dict(cells)
 	start_auto_move_to_center()
+	
+	var check_tile = Vector2i(1002, 1000);
+	var new_cell = Cell.new(check_tile, Cell.CellType.TYPE2)
+	coords[check_tile] = new_cell;
+	for cell_child in new_cell.childs: coords[cell_child] = new_cell;
+	var place_to_insert = 1;
+	cells.insert(place_to_insert, new_cell);
 
 
 func _process(_delta: float) -> void:
@@ -42,7 +52,13 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		mouse_tile = pos_to_tile(get_global_mouse_position());
 		if coords.has(mouse_tile):
-			spawn_cell(mouse_tile, Cell.CellType.TYPE1)
+			var cell = coords[mouse_tile];
+			print(cell)
+			if cell.cell_type == Cell.CellType.TYPE1:
+				spawn_cell(mouse_tile, Cell.CellType.TYPE1)
+			elif cell.cell_type == Cell.CellType.TYPE2:
+				for _i in range(nb_type2_spawn):
+					spawn_cell(mouse_tile, Cell.CellType.TYPE1)
 			queue_redraw()
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(get_global_mouse_position());
@@ -56,7 +72,6 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
-	
 	for i in range(10):
 		for j in range(10):
 			var pos = tile_to_pos(Vector2i(i, j))
@@ -76,8 +91,8 @@ func _draw() -> void:
 			var color = type2_color
 			if cell.center == mouse_tile or mouse_tile in cell.childs:
 				color = color.lightened(0.2)
-			draw_circle(pos, h/2 * 2.5 * overh, color, true)
-			draw_circle(pos, h/2 * 2.5 * overh, type2_color.darkened(0.2), false, 2)
+			draw_circle(pos, h/2 * 3 * overh, color, true)
+			draw_circle(pos, h/2 * 3 * overh, type2_color.darkened(0.2), false, 2)
 	
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
