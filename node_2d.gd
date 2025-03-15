@@ -3,7 +3,7 @@ extends Node2D
 const CENTER:= Vector2i(1_000, 1_000)
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
-const overh: float = 1;
+const overh: float = 1.2;
 const cam_smoothing: float = 0.002;
 
 const type1_color: Color = Color.LIGHT_PINK;
@@ -20,23 +20,7 @@ var mouse_tile: Vector2i;
 func _ready() -> void:
 	$Camera2D.position = tile_to_pos(CENTER);
 	cells = [
-		Cell.new(Vector2i(1_005, 1_005), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_006, 1_005), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_007, 1_005), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_008, 1_005), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_009, 1_005), Cell.CellType.TYPE1),
-		#
-		Cell.new(Vector2i(1_005, 1_006), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_006, 1_006), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_007, 1_006), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_008, 1_006), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_009, 1_006), Cell.CellType.TYPE1),
-		#
-		Cell.new(Vector2i(1_005, 1_007), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_006, 1_007), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_007, 1_007), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_008, 1_007), Cell.CellType.TYPE1),
-		Cell.new(Vector2i(1_009, 1_007), Cell.CellType.TYPE1),
+		Cell.new(Vector2i(1_000, 1_000), Cell.CellType.TYPE1)
 	];
 	cells.shuffle()
 	coords = Utils.cells_list_to_dict(cells)
@@ -76,16 +60,16 @@ func _draw() -> void:
 	for cell in cells:
 		var pos = tile_to_pos(cell.center)
 		if cell.cell_type == Cell.CellType.TYPE1:
+			var color = type1_color
 			if cell.center == mouse_tile:
-				draw_circle(pos, h/2 * overh, type1_color.lightened(0.2), true)
-			else:
-				draw_circle(pos, h/2 * overh, type1_color, true)
+				color = color.lightened(0.2)
+			draw_circle(pos, h/2 * overh, color, true)
 			draw_circle(pos, h/2 * overh, type1_color.darkened(0.2), false, 2)
 		elif  cell.cell_type == Cell.CellType.TYPE2:
+			var color = type2_color
 			if cell.center == mouse_tile or mouse_tile in cell.childs:
-				draw_circle(pos, h/2 * 2.5 * overh, type2_color.lightened(0.2), true)
-			else:
-				draw_circle(pos, h/2 * 2.5 * overh, type2_color, true)
+				color = color.lightened(0.2)
+			draw_circle(pos, h/2 * 2.5 * overh, color, true)
 			draw_circle(pos, h/2 * 2.5 * overh, type2_color.darkened(0.2), false, 2)
 	
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
@@ -100,7 +84,9 @@ func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 			if not coords.has(check_tile):
 				var new_cell = Cell.new(check_tile, cell_type)
 				coords[check_tile] = new_cell;
-				var place_to_insert = randi() % len(cells);
+				var place_to_insert = 1;
+				if len(cells) > 1:
+					place_to_insert = randi() % (len(cells) - 1) + 1;
 				cells.insert(place_to_insert, new_cell);
 				return
 		current_center += Utils.vec_from_dir(spawn_dir);
