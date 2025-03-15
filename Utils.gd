@@ -53,6 +53,23 @@ static func vec_from_dir(dir: Direction) -> Vector2i:
 			return Vector2i(1, 1)
 	return Vector2i(0, 0) # TODO crash
 
+
+static func moved_in_dir(start: Vector2i, dir: Direction) -> Vector2i:
+	match dir:
+		Direction.TopLeft: 
+			return start + Vector2i(start.y % 2 - 1, -1)
+		Direction.TopRight: 
+			return start + Vector2i(start.y % 2, -1)
+		Direction.Left: 
+			return start + Vector2i(-1, 0)
+		Direction.Right: 
+			return start + Vector2i(1, 0)
+		Direction.BottomLeft: 
+			return start + Vector2i(start.y % 2 - 1, 1)
+		Direction.BottomRight: 
+			return start + Vector2i(start.y % 2, 1)
+	return Vector2i(0, 0) # TODO crash
+
 static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
 	var result: Dictionary[Vector2i, Cell] = {}
 	for cell in base:
