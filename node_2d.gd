@@ -3,7 +3,8 @@ extends Node2D
 const CENTER:= Vector2i(1_000, 1_000)
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
-const overh: float = 1.33;
+const overh_type1: float = 1.33;
+const overh_type2: float = 1.15;
 const cam_smoothing: float = 0.002;
 
 const type1_color: Color = Color.LIGHT_PINK;
@@ -28,16 +29,10 @@ func _ready() -> void:
 	cells.shuffle()
 	coords = Utils.cells_list_to_dict(cells)
 	start_auto_move_to_center()
-	
-	var check_tile = Vector2i(1002, 1000);
-	var new_cell = Cell.new(check_tile, Cell.CellType.TYPE2)
-	coords[check_tile] = new_cell;
-	for cell_child in new_cell.childs: coords[cell_child] = new_cell;
-	var place_to_insert = 1;
-	cells.insert(place_to_insert, new_cell);
 
 
 func _process(_delta: float) -> void:
+	if cells.is_empty(): return
 	var cell_centers = cells.map(func(cell): return cell.center);
 	# Move cam to center of mass
 	var tot = cell_centers.reduce(func sum(accum, number): return accum + number, Vector2i.ZERO);
@@ -74,11 +69,11 @@ func _physics_process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	for i in range(10):
-		for j in range(10):
+	for i in range(980, 1020):
+		for j in range(980, 1020):
 			var pos = tile_to_pos(Vector2i(i, j))
-			draw_circle(pos, h/2 * overh, Color.PALE_VIOLET_RED.lightened(0.6), false, 2)
-	
+			draw_circle(pos, h/2, Color.PALE_VIOLET_RED.lightened(0.6), false, 2)
+
 	for cell in cells:
 		var pos = tile_to_pos(cell.center)
 		if cell.cell_type == Cell.CellType.TYPE1:
@@ -87,15 +82,15 @@ func _draw() -> void:
 				color = color.lightened(0.2)
 			if cell.can_merge:
 				color = color.darkened(0.1)
-			draw_circle(pos, h/2 * overh, color, true)
-			draw_circle(pos, h/2 * overh, type1_color.darkened(0.2), false, 2)
+			draw_circle(pos, h/2 * overh_type1, color, true)
+			draw_circle(pos, h/2 * overh_type1, type1_color.darkened(0.2), false, 2)
 		elif  cell.cell_type == Cell.CellType.TYPE2:
 			var color = type2_color
 			if cell.center == mouse_tile or mouse_tile in cell.childs:
 				color = color.lightened(0.2)
-			draw_circle(pos, h/2 * 3 * overh, color, true)
-			draw_circle(pos, h/2 * 3 * overh, type2_color.darkened(0.2), false, 2)
-	
+			draw_circle(pos, h/2 * 3 * overh_type2, color, true)
+			draw_circle(pos, h/2 * 3 * overh_type2, type2_color.darkened(0.2), false, 2)
+
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
 func merge() -> void:
@@ -107,11 +102,15 @@ func merge() -> void:
 			cells.remove_at(cells.find(cell))
 		elif cell.cell_type == Cell.CellType.TYPE2:
 			pass
-	
+
 	for cell in mergeable_cells:
 		if not check_if_coolide_with_type2(cell):
 			var new_cell = Cell.new(cell.center, Cell.CellType.TYPE2)
 			coords[cell.center] = new_cell;
+			for cell_child in new_cell.childs: coords[cell_child] = new_cell;
+			if cells.is_empty():
+				cells.append(new_cell);
+				return
 			var place_to_insert = 1;
 			if len(cells) > 1:
 				place_to_insert = randi() % (len(cells) - 1) + 1;
@@ -161,7 +160,7 @@ func start_auto_move_to_center() -> void:
 	timer.timeout.connect(func(): cells.map(func(cell): try_to_move_to_center(cell)))
 	timer.autostart = true
 	timer.start()
-	
+
 ## Bouge une cellule vers sa new_position
 func move_cell(cell: Cell, new_position: Vector2i) -> void:
 	coords.erase(cell.center)
@@ -182,6 +181,8 @@ func try_to_move_to_center(cell: Cell) -> void:
 
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge(type: Cell.CellType):
+	if cells.is_empty():
+		return
 	var cell_list: Array[Cell] = cells.duplicate(true)
 	var first_cell_i = cell_list.find_custom(func(cell): return cell.cell_type == type)
 	if first_cell_i == -1:
