@@ -50,6 +50,11 @@ func _input(event: InputEvent) -> void:
 			mouse_tile = new_mouse_tile;
 			queue_redraw()
 
+
+func _physics_process(delta: float) -> void:
+	set_can_merge()
+
+
 func _draw() -> void:
 	
 	for i in range(10):
@@ -63,6 +68,8 @@ func _draw() -> void:
 			var color = type1_color
 			if cell.center == mouse_tile:
 				color = color.lightened(0.2)
+			elif cell.can_merge:
+				color = color.darkened(0.5)
 			draw_circle(pos, h/2 * overh, color, true)
 			draw_circle(pos, h/2 * overh, type1_color.darkened(0.2), false, 2)
 		elif  cell.cell_type == Cell.CellType.TYPE2:
@@ -132,30 +139,39 @@ func try_to_move_to_center(cell: Cell) -> void:
 
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge():
-	var cell_list = cells.duplicate(true)
-	var first_cell = cell_list.pop_front()
-	var merge_neighbourgs = get_recursive_merge_neighbourgs(first_cell, cell_list)
+	var cell_list: Array[Cell] = cells.duplicate(true)
+	var first_cell: Cell = cell_list.pop_front()
+	first_cell.can_merge = true
+	var merge_neighbourgs: Array[Cell] = []
+	get_recursive_merge_neighbours(first_cell, cell_list, merge_neighbourgs)
+	if len(merge_neighbourgs) + 1 < Cell.CELLS_N_FOR_TYPE2:
+		return # not enought neighbourgs
 	for cell in merge_neighbourgs:
 		cell.can_merge = true
 
 
-func get_recursive_merge_neighbourgs(cell: Cell, cell_list: Array[Cell], current_count:= 1, dbg_rec_level:= 0) -> Array[Cell]:
-	var result: Array[Cell] = []
-	for dir in Utils.ALL_DIRECTION:
-		var pos = cell.center + Utils.vec_from_dir(dir)
-		if coords.has(pos) and cell_list.find(coords[pos]) != -1:
-			cell_list.remove_at(cell_list.find(coords[pos]))
-			result.push_back(coords[pos])
-			current_count += 1
-		if current_count >= Cell.CELLS_N_FOR_TYPE2:
-			return result
-	
-	if len(result) == 0:
-		return result
-	result.append_array(get_recursive_merge_neighbourgs(
-		result[0],
-		cell_list,
-		current_count,
-		dbg_rec_level + 1)
-	)
-	return result
+func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_neighbourgs: Array[Cell], dbg_rec_level:= 0) :
+	var new_positions = Utils.ALL_DIRECTION \
+		.map(func(dir): return cell.center + Utils.vec_from_dir(dir)) \
+		.filter(func(pos):return coords.has(pos) and cell_list.has(coords[pos]))
+
+	var added_cells_to_check: Array[Cell] = []
+
+	for pos in new_positions:
+		cell_list.remove_at(cell_list.find(coords[pos]))
+		merge_neighbourgs.push_back(coords[pos])
+		added_cells_to_check.push_back(coords[pos])
+		if len(merge_neighbourgs) + 1 == Cell.CELLS_N_FOR_TYPE2:
+			return
+
+	for new_cell in added_cells_to_check:
+		if len(merge_neighbourgs) + 1 == Cell.CELLS_N_FOR_TYPE2:
+			return
+		get_recursive_merge_neighbours(
+			new_cell,
+			cell_list,
+			merge_neighbourgs,
+			dbg_rec_level + 1
+		)
+		if len(merge_neighbourgs) + 1 == Cell.CELLS_N_FOR_TYPE2:
+			return
