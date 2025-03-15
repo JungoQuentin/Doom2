@@ -21,18 +21,21 @@ static func vec_to_direction(vec: Vector2i) -> Direction:
 	else:
 		return Direction.Right
 
-static func top_left(from: Vector2i) -> Vector2i:
-	return Vector2i(from.x, from.y - 1)
-static func top_right(from: Vector2i) -> Vector2i:
-	return Vector2i(from.x + 1, from.y - 1)
-static func left(from: Vector2i) -> Vector2i:
-	return Vector2i(from.x - 1, from.y)
-static func right(from: Vector2i) -> Vector2i:
-	return Vector2i(from.x + 1, from.y)
-static func bottom_left(from: Vector2i) -> Vector2i:
-	return Vector2i(from.x, from.y + 1)
-static func bottom_right(from: Vector2i) -> Vector2i:
-	return Vector2i(from.x + 1, from.y + 1)
+static func vec_from_dir(dir: Direction) -> Vector2i:
+	match dir:
+		Direction.TopLeft: 
+			return Vector2i(0, -1)
+		Direction.TopRight: 
+			return Vector2i(1, -1)
+		Direction.Left: 
+			return Vector2i(-1, 0)
+		Direction.Right: 
+			return Vector2i(1, 0)
+		Direction.BottomLeft: 
+			return Vector2i(0, 1)
+		Direction.BottomRight: 
+			return Vector2i(1, 1)
+	return Vector2i(0, 0) # TODO crash
 
 static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell.CellType]:
 	var result: Dictionary[Vector2i, Cell.CellType] = {}
