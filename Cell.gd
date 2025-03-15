@@ -14,5 +14,5 @@ func _init(center: Vector2i, cell_type: CellType):
 	self.cell_type = cell_type;
 	self.childs = [];
 	if cell_type == CellType.TYPE2:
-		for i in range(6): self.childs.append(center + Utils.vec_from_dir(i));
+		for i in range(6): self.childs.append(Utils.moved_in_dir(center, i));
 	self.can_merge = false;
