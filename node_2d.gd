@@ -2,8 +2,12 @@ extends Node2D
 
 const CENTER:= Vector2i(1_000, 1_000)
 const hex_ratio: float = 2/sqrt(3);
-const h: float = 40.0; # Cell size
+const h: float = 50.0; # Cell size
 const overh: float = 1;
+const cam_smoothing: float = 0.002;
+
+const type1_color: Color = Color.LIGHT_PINK;
+const type2_color: Color = Color.LIGHT_SALMON;
 
 # Stores the coods (Vec2) of every filled tile
 var coords: Dictionary[Vector2i, Cell.CellType] = {Vector2i(5, 5): Cell.CellType.TYPE1};
@@ -39,6 +43,17 @@ func _ready() -> void:
 	start_auto_move_to_center()
 
 
+func _process(_delta: float) -> void:
+	var cell_centers = cells.map(func(cell): return cell.center);
+	# Move cam to center of mass
+	var tot = cell_centers.reduce(func sum(accum, number): return accum + number, Vector2i.ZERO);
+	$Camera2D.position = $Camera2D.position * (1 - cam_smoothing) + tile_to_pos(tot / len(cells)) * cam_smoothing;
+	# Zoom cam to see all
+	var cells_y = cell_centers.map(func(pos): return pos.y);
+	var zoom = max(1, (cells_y.max() - cells_y.min()) * h / 600);
+	$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing;
+
+
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		mouse_tile = pos_to_tile(get_global_mouse_position());
@@ -60,11 +75,18 @@ func _draw() -> void:
 	
 	for cell in cells:
 		var pos = tile_to_pos(cell.center)
-		if cell.center == mouse_tile:
-			draw_circle(pos, h/2 * overh, Color.LIGHT_PINK.lightened(0.2), true)
-		else:
-			draw_circle(pos, h/2 * overh, Color.LIGHT_PINK, true)
-		draw_circle(pos, h/2 * overh, Color.LIGHT_PINK.darkened(0.2), false, 2)
+		if cell.cell_type == Cell.CellType.TYPE1:
+			if cell.center == mouse_tile:
+				draw_circle(pos, h/2 * overh, type1_color.lightened(0.2), true)
+			else:
+				draw_circle(pos, h/2 * overh, type1_color, true)
+			draw_circle(pos, h/2 * overh, type1_color.darkened(0.2), false, 2)
+		elif  cell.cell_type == Cell.CellType.TYPE2:
+			if cell.center == mouse_tile or mouse_tile in cell.childs:
+				draw_circle(pos, h/2 * 2.5 * overh, type2_color.lightened(0.2), true)
+			else:
+				draw_circle(pos, h/2 * 2.5 * overh, type2_color, true)
+			draw_circle(pos, h/2 * 2.5 * overh, type2_color.darkened(0.2), false, 2)
 	
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
