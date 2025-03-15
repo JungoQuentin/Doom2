@@ -153,7 +153,7 @@ func set_can_merge():
 func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_neighbourgs: Array[Cell], dbg_rec_level:= 0) :
 	var new_positions = Utils.ALL_DIRECTION \
 		.map(func(dir): return Utils.moved_in_dir(cell.center, dir)) \
-		.filter(func(pos):return coords.has(pos) and cell_list.has(coords[pos]))
+		.filter(func(pos): return coords.has(pos) and cell_list.has(coords[pos]))
 
 	var added_cells_to_check: Array[Cell] = []
 
@@ -161,11 +161,11 @@ func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_ne
 		cell_list.remove_at(cell_list.find(coords[pos]))
 		merge_neighbourgs.push_back(coords[pos])
 		added_cells_to_check.push_back(coords[pos])
-		if len(merge_neighbourgs) + 1 == Cell.CELLS_N_FOR_TYPE2:
+		if len(merge_neighbourgs) + 1 >= Cell.CELLS_N_FOR_TYPE2:
 			return
 
 	for new_cell in added_cells_to_check:
-		if len(merge_neighbourgs) + 1 == Cell.CELLS_N_FOR_TYPE2:
+		if len(merge_neighbourgs) + 1 >= Cell.CELLS_N_FOR_TYPE2:
 			return
 		get_recursive_merge_neighbours(
 			new_cell,
@@ -173,5 +173,5 @@ func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_ne
 			merge_neighbourgs,
 			dbg_rec_level + 1
 		)
-		if len(merge_neighbourgs) + 1 == Cell.CELLS_N_FOR_TYPE2:
+		if len(merge_neighbourgs) + 1 >= Cell.CELLS_N_FOR_TYPE2:
 			return
