@@ -54,7 +54,9 @@ func _input(event: InputEvent) -> void:
 		if coords.has(mouse_tile):
 			var cell = coords[mouse_tile];
 			print(cell)
-			if cell.cell_type == Cell.CellType.TYPE1:
+			if cell.can_merge:
+				merge()
+			elif cell.cell_type == Cell.CellType.TYPE1:
 				spawn_cell(mouse_tile, Cell.CellType.TYPE1)
 			elif cell.cell_type == Cell.CellType.TYPE2:
 				for _i in range(nb_type2_spawn):
@@ -95,6 +97,16 @@ func _draw() -> void:
 			draw_circle(pos, h/2 * 3 * overh, type2_color.darkened(0.2), false, 2)
 	
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
+
+func merge() -> void:
+	var mergeable_cells: Array[Cell] = cells.filter(func(cell): return cell.can_merge)
+
+	for cell in mergeable_cells:
+		if cell.cell_type == Cell.CellType.TYPE1:
+			coords.erase(cell.center)
+			cells.remove_at(cells.find(cell))
+		elif cell.cell_type == Cell.CellType.TYPE1:
+			pass
 
 
 func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
@@ -156,11 +168,11 @@ func try_to_move_to_center(cell: Cell) -> void:
 func set_can_merge():
 	var cell_list: Array[Cell] = cells.duplicate(true)
 	var first_cell: Cell = cell_list.pop_front()
-	first_cell.can_merge = true
 	var merge_neighbourgs: Array[Cell] = []
 	get_recursive_merge_neighbours(first_cell, cell_list, merge_neighbourgs)
 	if len(merge_neighbourgs) + 1 < Cell.CELLS_N_FOR_TYPE2:
 		return # not enought neighbourgs
+	first_cell.can_merge = true
 	for cell in merge_neighbourgs:
 		cell.can_merge = true
 
@@ -168,7 +180,7 @@ func set_can_merge():
 func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_neighbourgs: Array[Cell], dbg_rec_level:= 0) :
 	var new_positions = Utils.ALL_DIRECTION \
 		.map(func(dir): return Utils.moved_in_dir(cell.center, dir)) \
-		.filter(func(pos): return coords.has(pos) and cell_list.has(coords[pos]))
+		.filter(func(pos): return coords.has(pos) and cell_list.has(coords[pos]) and coords[pos].cell_type == cell.cell_type)
 
 	var added_cells_to_check: Array[Cell] = []
 
