@@ -4,8 +4,8 @@ const CENTER:= Vector2i(1_000, 1_000)
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
 const overh_type1: float = 1.33;
-const overh_type2: float = 1.15;
-const cam_smoothing: float = 0.002;
+const overh_type2: float = 1.2;
+const cam_smoothing: float = 0.005;
 
 const type1_color: Color = Color.LIGHT_PINK;
 const type2_color: Color = Color.LIGHT_SALMON;
@@ -97,7 +97,7 @@ func _draw() -> void:
 
 func merge(type: Cell.CellType) -> void:
 	var mergeable_cells: Array[Cell] = cells.filter(func(cell): return cell.can_merge and cell.cell_type == type)
-	
+
 	for cell in mergeable_cells:
 		match type:
 			Cell.CellType.TYPE1:
@@ -108,11 +108,11 @@ func merge(type: Cell.CellType) -> void:
 					coords.erase(child)
 				coords.erase(cell.center)
 				cells.remove_at(cells.find(cell))
-	
+
 	match type:
 		Cell.CellType.TYPE1:
 			for cell in mergeable_cells:
-				if not check_if_coolide_with_type2(cell):
+				if not Utils.are_there_cells_around(cell.center, coords):
 					var new_cell = Cell.new(cell.center, Cell.CellType.TYPE2)
 					coords[cell.center] = new_cell;
 					for cell_child in new_cell.childs: coords[cell_child] = new_cell;
@@ -126,12 +126,6 @@ func merge(type: Cell.CellType) -> void:
 					return
 		Cell.CellType.TYPE2:
 			pass
-
-func check_if_coolide_with_type2(cell: Cell) -> bool:
-	for i in range(6):
-		if coords.has(Utils.moved_in_dir(cell.center, i)):
-			return true
-	return false
 
 
 func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
@@ -173,21 +167,39 @@ func start_auto_move_to_center() -> void:
 
 ## Bouge une cellule vers sa new_position
 func move_cell(cell: Cell, new_position: Vector2i) -> void:
-	coords.erase(cell.center)
-	coords[new_position] = cell
-	cell.center = new_position
+	if cell.cell_type == Cell.CellType.TYPE1:
+		coords.erase(cell.center)
+		coords[new_position] = cell
+		cell.center = new_position
+	elif cell.cell_type == Cell.CellType.TYPE2:
+		coords.erase(cell.center)
+		for i in range(6):
+			coords.erase(Utils.moved_in_dir(cell.center, i))
+		coords[new_position] = cell
+		for i in range(6):
+			coords[Utils.moved_in_dir(cell.center, i)] = cell
+		cell.center = new_position
+		cell.childs.clear()
+		for i in range(6):
+			cell.childs.append(Utils.moved_in_dir(cell.center, i))
 	queue_redraw()
 
 ## Bouge une cellule vers le centre si possible
 func try_to_move_to_center(cell: Cell) -> void:
-	if cell.cell_type != Cell.CellType.TYPE1:
-		return # TODO calcul different
 	if cell.center == CENTER:
 		return
-	var direction = Utils.vec_to_direction(CENTER - cell.center)
-	var new_position = Utils.moved_in_dir(cell.center, direction)
-	if !coords.has(new_position):
-		move_cell(cell, new_position)
+	var angle = rad_to_deg(Vector2(CENTER - cell.center).angle());
+	angle += (randf() - 0.5) * 90;
+	var direction = Utils.angle_to_direction(angle);
+
+	if cell.cell_type == Cell.CellType.TYPE1:
+		var new_position = Utils.moved_in_dir(cell.center, direction)
+		if !coords.has(new_position):
+			move_cell(cell, new_position)
+	elif cell.cell_type == Cell.CellType.TYPE2:
+		var new_position = Utils.moved_in_dir(cell.center, direction)
+		if not Utils.are_there_type2_cells_around(new_position, coords):
+			move_cell(cell, new_position)
 
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge(type: Cell.CellType):
@@ -243,16 +255,16 @@ func get_recursive_merge_neighbours_type2(cell: Cell, cell_list: Array[Cell], me
 			## avec le coords[pos], je get direct le parent, meme si je suis sur la pos de l'enfant
 			if coords.has(pos) and cell_list.has(coords[pos]):
 				new_cells_to_check.push_back(coords[pos])
-	
+
 	var added_cells_to_check: Array[Cell] = []
-	
+
 	for new_cell in new_cells_to_check:
 		cell_list.remove_at(cell_list.find(new_cell))
 		merge_neighbourgs.push_back(new_cell)
 		added_cells_to_check.push_back(new_cell)
 		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
 			return
-	
+
 	for new_cell in added_cells_to_check:
 		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
 			return
