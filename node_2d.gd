@@ -253,7 +253,7 @@ func get_recursive_merge_neighbours_type2(cell: Cell, cell_list: Array[Cell], me
 		for dir in Utils.ALL_DIRECTION:
 			var pos = Utils.moved_in_dir(child, dir)
 			## avec le coords[pos], je get direct le parent, meme si je suis sur la pos de l'enfant
-			if coords.has(pos) and cell_list.has(coords[pos]):
+			if coords.has(pos) and cell_list.has(coords[pos]) and !new_cells_to_check.has(coords[pos]):
 				new_cells_to_check.push_back(coords[pos])
 
 	var added_cells_to_check: Array[Cell] = []
