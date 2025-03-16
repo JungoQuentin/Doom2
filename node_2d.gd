@@ -2,6 +2,7 @@ class_name Doom2
 extends Node2D
 
 const CENTER:= Vector2i(1_000, 1_000)
+const TIME_BETWEEN_MULTIPLE_SPAWN = 0.05
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
 const overh_type1: float = 1.33;
@@ -50,14 +51,19 @@ func _input(event: InputEvent) -> void:
 			elif cell.cell_type == Cell.CellType.TYPE1:
 				spawn_cell(mouse_tile, Cell.CellType.TYPE1)
 			elif cell.cell_type == Cell.CellType.TYPE2:
-				for _i in range(nb_type2_spawn):
-					spawn_cell(mouse_tile, Cell.CellType.TYPE1)
+				spawn_many(nb_type2_spawn)
 			queue_redraw()
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(get_global_mouse_position());
 		if new_mouse_tile != mouse_tile:
 			mouse_tile = new_mouse_tile;
 			queue_redraw()
+
+
+func spawn_many(q: int) -> void: 
+	for _i in range(q):
+		await get_tree().create_timer(TIME_BETWEEN_MULTIPLE_SPAWN).timeout
+		spawn_cell(mouse_tile, Cell.CellType.TYPE1)
 
 
 func _physics_process(_delta: float) -> void:
@@ -134,6 +140,8 @@ func merge(type: Cell.CellType) -> void:
 func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 	var spawn_dir = randi() % 6; # Choose 1 of 6 random directions (spawn_dir)
 	var current_center = source_coords;
+	$BubblesRandomAudioStreamPlayer2D.play()
+	queue_redraw()
 	while true:
 		for i in range(6):
 			var check_tile = Utils.moved_in_dir(current_center, (spawn_dir + i) % 6);
@@ -146,7 +154,6 @@ func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 				cells.insert(place_to_insert, new_cell);
 				return
 		current_center = Utils.moved_in_dir(current_center, spawn_dir);
-
 
 func pos_to_tile(pos: Vector2) -> Vector2i:
 	var odd = int(pos.y / h - 0.5) % 2

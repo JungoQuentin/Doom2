@@ -1,8 +1,28 @@
-[gd_scene load_steps=2 format=3 uid="uid://bvot1qpsbbms6"]
+[gd_scene load_steps=9 format=3 uid="uid://bvot1qpsbbms6"]
 
 [ext_resource type="Script" uid="uid://ckdp73n10t57q" path="res://node_2d.gd" id="1_wtcfe"]
+[ext_resource type="AudioStream" uid="uid://dtwm8bh7hg77p" path="res://assets/sfx/pop-2.mp3" id="2_d21ai"]
+[ext_resource type="AudioStream" uid="uid://cfpdrq8pbivns" path="res://assets/sfx/pop-1.mp3" id="3_epypp"]
+[ext_resource type="AudioStream" uid="uid://dfrajlv4q64eg" path="res://assets/sfx/pop-3.mp3" id="3_rj586"]
+[ext_resource type="AudioStream" uid="uid://bi7ibjjn7cb8o" path="res://assets/sfx/pop-4.mp3" id="4_4d7sh"]
+[ext_resource type="AudioStream" uid="uid://bytgqs5rlnwa8" path="res://assets/sfx/pop-5.mp3" id="5_ir8iy"]
+[ext_resource type="AudioStream" uid="uid://dcwx1x6lgenxi" path="res://assets/sfx/pop-6.mp3" id="6_hqns4"]
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_x0ka3"]
+streams_count = 5
+stream_0/stream = ExtResource("2_d21ai")
+stream_1/stream = ExtResource("3_rj586")
+stream_2/stream = ExtResource("4_4d7sh")
+stream_3/stream = ExtResource("5_ir8iy")
+stream_4/stream = ExtResource("6_hqns4")
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_wtcfe")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="BubblesRandomAudioStreamPlayer-V2" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamRandomizer_x0ka3")
+
+[node name="BubblesRandomAudioStreamPlayer2D" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_epypp")
