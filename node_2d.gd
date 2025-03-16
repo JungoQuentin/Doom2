@@ -37,6 +37,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	b += delta;
+	queue_redraw()
 	
 	if cells.is_empty(): return
 	var cell_centers = cells.map(func(cell): return cell.center);
@@ -63,13 +64,11 @@ func _input(event: InputEvent) -> void:
 			elif cell.cell_type == Cell.CellType.TYPE3:
 				spawn_many(nb_type3_spawn)
 			set_can_merge()
-			queue_redraw()
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(get_global_mouse_position());
 		if new_mouse_tile != mouse_tile:
 			mouse_tile = new_mouse_tile;
 			set_can_merge()
-			queue_redraw()
 
 
 func spawn_many(q: int) -> void:
@@ -182,7 +181,6 @@ func spawn_cell(source_coords: Vector2i):
 	var spawn_dir = randi() % 6; # Choose 1 of 6 random directions (spawn_dir)
 	var current_center = source_coords;
 	$PopT1.play()
-	queue_redraw()
 	while true:
 		for i in range(6):
 			var check_tile = Utils.moved_in_dir(current_center, (spawn_dir + i) % 6);
@@ -250,7 +248,6 @@ func move_cell(cell: Cell, dir: Utils.Direction) -> void:
 			coords[Utils.moved_in_dir(child, dir)] = cell
 		for i in range(18):
 			cell.childs[i] = Utils.moved_in_dir(cell.childs[i], dir)
-	queue_redraw()
 
 ## Bouge une cellule vers le centre si possible
 func try_to_move_to_center(cell: Cell) -> void:
