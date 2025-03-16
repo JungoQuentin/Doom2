@@ -26,7 +26,9 @@ script = ExtResource("1_ibotj")
 [node name="TopBar" type="HBoxContainer" parent="."]
 anchors_preset = 10
 anchor_right = 1.0
+offset_left = 70.0
 offset_top = 70.0
+offset_right = -76.0
 offset_bottom = 215.0
 grow_horizontal = 2
 size_flags_vertical = 0
@@ -45,9 +47,10 @@ horizontal_alignment = 1
 
 [node name="C2" type="VBoxContainer" parent="TopBar"]
 layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="ProgressBar" type="ProgressBar" parent="TopBar/C2"]
-custom_minimum_size = Vector2(1000, 20)
+custom_minimum_size = Vector2(500, 20)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_ibotj")
 theme_override_styles/fill = SubResource("StyleBoxFlat_n5ude")
@@ -55,7 +58,7 @@ value = 50.0
 show_percentage = false
 
 [node name="CurrentGoal" type="Label" parent="TopBar/C2"]
-custom_minimum_size = Vector2(900, 0)
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_fonts/font = ExtResource("1_nltto")
