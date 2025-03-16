@@ -5,7 +5,7 @@ enum CellType{ TYPE1, TYPE2, TYPE3 }
 ## Nombre de cellule qu'il faut pour passer au type suivant
 const N_CELL_FOR_TYPE: Dictionary[int, int] = {
 	CellType.TYPE1: 12,
-	CellType.TYPE2: 5,
+	CellType.TYPE2: 6,
 	CellType.TYPE3: 10,
 }
 

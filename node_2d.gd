@@ -5,14 +5,14 @@ const CENTER:= Vector2i(1_000, 1_000)
 const TIME_BETWEEN_MULTIPLE_SPAWN = 0.05
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
-const overh_type1: float = 1.33;
-const overh_type2: float = 1.2 * 3;
-const overh_type3: float = 1.15 * 4.5;
+const overh_type1: float = 1.35;
+const overh_type2: float = 1.25 * 3;
+const overh_type3: float = 1.25 * 4.5;
 const cam_smoothing: float = 0.005;
 
 const type1_color: Color = Color.LIGHT_PINK;
-const type2_color: Color = Color.LIGHT_SALMON;
-const type3_color: Color = Color.LIGHT_SKY_BLUE;
+var type2_color: Color = Color.LIGHT_SALMON.lerp(Color.LIGHT_PINK, 0.5);
+var type3_color: Color = Color.PLUM.lerp(Color.LIGHT_PINK, 0.5);
 
 # Number of type1 cells spawned from type2 cell
 const nb_type2_spawn: int = 3;
@@ -94,13 +94,13 @@ func _draw() -> void:
 		elif cell.cell_type == Cell.CellType.TYPE3:
 			color = type3_color
 			overh = overh_type3
-
-		if cell.center == mouse_tile or mouse_tile in cell.childs:
-			color = color.lightened(0.2)
-		if cell.can_merge:
-			color = color.darkened(0.1)
-		draw_circle(pos, h/2 * overh, color, true)
-		draw_circle(pos, h/2 * overh, color.darkened(0.2), false, 2)
+		
+		var col = color
+		if cell.can_merge or cell.center == mouse_tile or mouse_tile in cell.childs:
+			col = color.darkened(0.1)
+		draw_circle(pos, h/2 * overh, col, true)
+		draw_circle(pos, h/2 * overh, color.darkened(0.1), false, 3)
+		draw_circle(pos, h/8 * overh, color.darkened(0.1), true)
 	"""
 	for coord in coords: # DEBUG
 		var cell_type = coords[coord].cell_type
