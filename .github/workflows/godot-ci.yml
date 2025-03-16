@@ -45,4 +45,4 @@ jobs:
           ./butler -V
           ./butler login
           zip -r site _site
-          ./butler push site.zip memeandme/doom2:web-final
+          ./butler push site.zip memeandme/cell-factory:web-final
