@@ -52,7 +52,7 @@ func _input(event: InputEvent) -> void:
 			if cell.can_merge:
 				merge(cell.cell_type)
 			elif cell.cell_type == Cell.CellType.TYPE1:
-				spawn_cell(mouse_tile, "A")
+				spawn_cell(mouse_tile)
 			elif cell.cell_type == Cell.CellType.TYPE2:
 				spawn_many(nb_type2_spawn)
 			queue_redraw()
@@ -66,7 +66,7 @@ func _input(event: InputEvent) -> void:
 func spawn_many(q: int) -> void:
 	for _i in range(q):
 		await get_tree().create_timer(TIME_BETWEEN_MULTIPLE_SPAWN).timeout
-		spawn_cell(mouse_tile, "many")
+		spawn_cell(mouse_tile)
 
 
 func _physics_process(_delta: float) -> void:
@@ -120,16 +120,15 @@ func start_factories() -> void:
 	var timer = Timer.new()
 	add_child(timer)
 	timer.wait_time = 0.5
-	timer.timeout.connect(func(): cells.map(func(cell): factory(cell)))
+	timer.timeout.connect(factory)
 	timer.autostart = true
 	timer.start()
 
 
-func factory(cell: Cell):
-	if cell.cell_type != Cell.CellType.TYPE3:
-		return
-	# FACTORY
-	# spawn_cell(cell.center, "auto")
+func factory():
+	for cell in cells:
+		if cell.cell_type == Cell.CellType.TYPE3:
+			spawn_cell(cell.center)
 
 
 func merge(type: Cell.CellType) -> void:
@@ -166,12 +165,11 @@ func merge(type: Cell.CellType) -> void:
 			return
 
 
-func spawn_cell(source_coords: Vector2i, caller=""):
+func spawn_cell(source_coords: Vector2i):
 	var spawn_dir = randi() % 6; # Choose 1 of 6 random directions (spawn_dir)
 	var current_center = source_coords;
 	$BubblesRandomAudioStreamPlayer2D.play()
 	queue_redraw()
-	# print("Start ", spawn_dir, " ", caller)
 	while true:
 		for i in range(6):
 			var check_tile = Utils.moved_in_dir(current_center, (spawn_dir + i) % 6);
@@ -193,7 +191,6 @@ func pos_to_tile(pos: Vector2) -> Vector2i:
 func tile_to_pos(tile_coords: Vector2i) -> Vector2:
 	var odd = tile_coords.y % 2;
 	return h * Vector2(hex_ratio * tile_coords.x + odd * 0.5, tile_coords.y)
-
 
 
 ## Lance la logique de deplacement automatique vers le centre
@@ -227,7 +224,6 @@ func move_cell(cell: Cell, dir: Utils.Direction) -> void:
 			coords[Utils.moved_in_dir(child, dir)] = cell
 		for i in range(6):
 			cell.childs[i] = Utils.moved_in_dir(cell.childs[i], dir)
-
 	queue_redraw()
 
 ## Bouge une cellule vers le centre si possible
