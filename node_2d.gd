@@ -225,6 +225,20 @@ func move_cell(cell: Cell, dir: Utils.Direction) -> void:
 			coords[Utils.moved_in_dir(child, dir)] = cell
 		for i in range(6):
 			cell.childs[i] = Utils.moved_in_dir(cell.childs[i], dir)
+	elif cell.cell_type == Cell.CellType.TYPE3:
+		for child in cell.childs:
+			coords.erase(child)
+			var shifted_child = Utils.moved_in_dir(child, dir)
+			if coords.has(shifted_child) and coords[shifted_child].cell_type == Cell.CellType.TYPE1:
+				cells.remove_at(cells.find(coords[shifted_child]))
+				coords.erase(shifted_child)
+		coords.erase(cell.center)
+		coords[new_position] = cell
+		cell.center = new_position
+		for child in cell.childs:
+			coords[Utils.moved_in_dir(child, dir)] = cell
+		for i in range(18):
+			cell.childs[i] = Utils.moved_in_dir(cell.childs[i], dir)
 	queue_redraw()
 
 ## Bouge une cellule vers le centre si possible
@@ -242,8 +256,11 @@ func try_to_move_to_center(cell: Cell) -> void:
 	elif cell.cell_type == Cell.CellType.TYPE2:
 		var new_position = Utils.moved_in_dir(cell.center, direction)
 		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
-			if randf() > 0.8:
-				move_cell(cell, direction)
+			move_cell(cell, direction)
+	elif cell.cell_type == Cell.CellType.TYPE3:
+		var new_position = Utils.moved_in_dir(cell.center, direction)
+		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
+			move_cell(cell, direction)
 
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge():
