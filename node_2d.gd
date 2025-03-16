@@ -16,6 +16,7 @@ const type3_color: Color = Color.LIGHT_SKY_BLUE;
 
 # Number of type1 cells spawned from type2 cell
 const nb_type2_spawn: int = 3;
+const nb_type3_spawn: int = 5;
 
 # Stores the coods (Vec2) of every filled tile
 var coords: Dictionary[Vector2i, Cell]
@@ -55,6 +56,8 @@ func _input(event: InputEvent) -> void:
 				spawn_cell(mouse_tile)
 			elif cell.cell_type == Cell.CellType.TYPE2:
 				spawn_many(nb_type2_spawn)
+			elif cell.cell_type == Cell.CellType.TYPE3:
+				spawn_many(nb_type3_spawn)
 			set_can_merge()
 			queue_redraw()
 	if event is InputEventMouseMotion:
@@ -92,7 +95,7 @@ func _draw() -> void:
 			color = type3_color
 			overh = overh_type3
 
-		if cell.center == mouse_tile:
+		if cell.center == mouse_tile or mouse_tile in cell.childs:
 			color = color.lightened(0.2)
 		if cell.can_merge:
 			color = color.darkened(0.1)
@@ -116,14 +119,14 @@ func _draw() -> void:
 func start_factories() -> void:
 	var timer = Timer.new()
 	add_child(timer)
-	timer.wait_time = 0.5
+	timer.wait_time = 2.0 # une cellule type1 toutes les 2 secondes
 	timer.timeout.connect(factory)
 	timer.autostart = true
 	timer.start()
 
 
 func factory():
-	for cell in cells:
+	for cell in cells.duplicate(true):
 		if cell.cell_type == Cell.CellType.TYPE3:
 			spawn_cell(cell.center)
 
