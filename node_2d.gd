@@ -139,11 +139,13 @@ func merge(type: Cell.CellType) -> void:
 			Cell.CellType.TYPE1:
 				coords.erase(cell.center)
 				cells.remove_at(cells.find(cell))
+				$PopT2.play()
 			Cell.CellType.TYPE2:
 				for child in cell.childs:
 					coords.erase(child)
 				coords.erase(cell.center)
 				cells.remove_at(cells.find(cell))
+				$PopT3.play()
 
 	for cell in mergeable_cells:
 		if not Utils.are_there_bigger_cells_around(cell.center, coords, cell.cell_type, cell):
@@ -168,7 +170,7 @@ func merge(type: Cell.CellType) -> void:
 func spawn_cell(source_coords: Vector2i):
 	var spawn_dir = randi() % 6; # Choose 1 of 6 random directions (spawn_dir)
 	var current_center = source_coords;
-	$BubblesRandomAudioStreamPlayer2D.play()
+	$PopT1.play()
 	queue_redraw()
 	while true:
 		for i in range(6):

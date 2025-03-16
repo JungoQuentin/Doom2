@@ -1,13 +1,23 @@
-[gd_scene load_steps=3 format=3 uid="uid://bvot1qpsbbms6"]
+[gd_scene load_steps=5 format=3 uid="uid://bvot1qpsbbms6"]
 
 [ext_resource type="Script" uid="uid://ckdp73n10t57q" path="res://node_2d.gd" id="1_wtcfe"]
+[ext_resource type="AudioStream" uid="uid://cls37rlvrfk35" path="res://assets/sfx/bubble-1.mp3" id="2_epypp"]
 [ext_resource type="AudioStream" uid="uid://cfpdrq8pbivns" path="res://assets/sfx/pop-1.mp3" id="3_epypp"]
+[ext_resource type="AudioStream" uid="uid://df8cagluxdhs0" path="res://assets/sfx/construction-short.mp3" id="4_0hol4"]
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("1_wtcfe")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="BubblesRandomAudioStreamPlayer2D" type="AudioStreamPlayer" parent="."]
+[node name="PopT1" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_epypp")
 bus = &"CellSpawn"
+
+[node name="PopT2" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_epypp")
+bus = &"CellSpawn"
+
+[node name="PopT3" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_0hol4")
+bus = &"Cell3Spawn"
