@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://dfu821w7yg3yu" path="res://assets/img/reset-svgrepo-com-hover.svg" id="4_y4yjw"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y4yjw"]
-bg_color = Color(0.901961, 0.647059, 0.92549, 0.505882)
+bg_color = Color(0.899, 0.558, 0.93, 0.211765)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ibotj"]
 bg_color = Color(1, 1, 1, 0.423529)

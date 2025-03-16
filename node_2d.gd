@@ -100,7 +100,7 @@ func _draw() -> void:
 			col = color.darkened(0.1)
 		draw_circle(pos, h/2 * overh, col, true)
 		draw_circle(pos, h/2 * overh, color.darkened(0.1), false, 3)
-		draw_circle(pos, h/8 * overh, color.darkened(0.1), true)
+		draw_circle(pos, h/8 * overh, color.darkened(0.15), true)
 	"""
 	for coord in coords: # DEBUG
 		var cell_type = coords[coord].cell_type
