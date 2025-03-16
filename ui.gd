@@ -9,7 +9,15 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	total_cells.text = str(game.coords.size())
+	var tot = 0
+	for cell in game.cells:
+		if cell.cell_type == Cell.CellType.TYPE1:
+			tot += 1
+		elif cell.cell_type == Cell.CellType.TYPE2:
+			tot += 15
+		elif cell.cell_type == Cell.CellType.TYPE3:
+			tot += 100
+	total_cells.text = str(tot)
 
 
 func on_click_reset() -> void:

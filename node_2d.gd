@@ -29,6 +29,7 @@ func _ready() -> void:
 	$Camera2D.position = tile_to_pos(CENTER);
 	coords = Utils.cells_list_to_dict(cells)
 	start_auto_move_to_center()
+	start_factories()
 
 
 func _process(_delta: float) -> void:
@@ -51,7 +52,7 @@ func _input(event: InputEvent) -> void:
 			if cell.can_merge:
 				merge(cell.cell_type)
 			elif cell.cell_type == Cell.CellType.TYPE1:
-				spawn_cell(mouse_tile, Cell.CellType.TYPE1)
+				spawn_cell(mouse_tile, "A")
 			elif cell.cell_type == Cell.CellType.TYPE2:
 				spawn_many(nb_type2_spawn)
 			queue_redraw()
@@ -65,7 +66,7 @@ func _input(event: InputEvent) -> void:
 func spawn_many(q: int) -> void:
 	for _i in range(q):
 		await get_tree().create_timer(TIME_BETWEEN_MULTIPLE_SPAWN).timeout
-		spawn_cell(mouse_tile, Cell.CellType.TYPE1)
+		spawn_cell(mouse_tile, "many")
 
 
 func _physics_process(_delta: float) -> void:
@@ -114,6 +115,23 @@ func _draw() -> void:
 
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
+
+func start_factories() -> void:
+	var timer = Timer.new()
+	add_child(timer)
+	timer.wait_time = 0.5
+	timer.timeout.connect(func(): cells.map(func(cell): factory(cell)))
+	timer.autostart = true
+	timer.start()
+
+
+func factory(cell: Cell):
+	if cell.cell_type != Cell.CellType.TYPE3:
+		return
+	# FACTORY
+	# spawn_cell(cell.center, "auto")
+
+
 func merge(type: Cell.CellType) -> void:
 	var mergeable_cells: Array[Cell] = cells.filter(func(cell): return cell.can_merge and cell.cell_type == type)
 
@@ -148,16 +166,17 @@ func merge(type: Cell.CellType) -> void:
 			return
 
 
-func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
+func spawn_cell(source_coords: Vector2i, caller=""):
 	var spawn_dir = randi() % 6; # Choose 1 of 6 random directions (spawn_dir)
 	var current_center = source_coords;
 	$BubblesRandomAudioStreamPlayer2D.play()
 	queue_redraw()
+	# print("Start ", spawn_dir, " ", caller)
 	while true:
 		for i in range(6):
 			var check_tile = Utils.moved_in_dir(current_center, (spawn_dir + i) % 6);
 			if not coords.has(check_tile):
-				var new_cell = Cell.new(check_tile, cell_type)
+				var new_cell = Cell.new(check_tile, Cell.CellType.TYPE1)
 				coords[check_tile] = new_cell;
 				var place_to_insert = 1;
 				if len(cells) > 1:
@@ -165,6 +184,7 @@ func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
 				cells.insert(place_to_insert, new_cell);
 				return
 		current_center = Utils.moved_in_dir(current_center, spawn_dir);
+		print(spawn_dir, current_center)
 
 func pos_to_tile(pos: Vector2) -> Vector2i:
 	var odd = int(pos.y / h - 0.5) % 2
