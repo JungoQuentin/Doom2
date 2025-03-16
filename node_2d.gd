@@ -126,8 +126,9 @@ func start_factories() -> void:
 
 
 func factory():
-	for cell in cells.duplicate(true):
+	for cell in cells.duplicate():
 		if cell.cell_type == Cell.CellType.TYPE3:
+			await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
 			spawn_cell(cell.center)
 
 
