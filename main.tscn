@@ -1,65 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://dhj1rjgqrc2gj"]
+[gd_scene load_steps=3 format=3 uid="uid://dhj1rjgqrc2gj"]
 
 [ext_resource type="PackedScene" uid="uid://bvot1qpsbbms6" path="res://node_2d.tscn" id="1_ig7tw"]
-[ext_resource type="FontFile" uid="uid://c2evp0lb2lg4v" path="res://assets/fonts/CherryBombOne-Regular.ttf" id="2_0xm2m"]
-[ext_resource type="Texture2D" uid="uid://cchx8b0jtunqm" path="res://assets/img/reset-svgrepo-com.svg" id="3_h2yge"]
-[ext_resource type="Texture2D" uid="uid://dfu821w7yg3yu" path="res://assets/img/reset-svgrepo-com-hover.svg" id="4_1bvp3"]
-[ext_resource type="Texture2D" uid="uid://dwlxksh3ja74w" path="res://assets/img/reset-svgrepo-com-click.svg" id="4_lquwl"]
+[ext_resource type="PackedScene" uid="uid://3xsovfg5vqyt" path="res://ui.tscn" id="2_0xm2m"]
 
 [node name="Main" type="Node2D"]
 
 [node name="Game" parent="." instance=ExtResource("1_ig7tw")]
 
-[node name="UI" type="CanvasLayer" parent="."]
-
-[node name="TopBar" type="HBoxContainer" parent="UI"]
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 70.0
-offset_bottom = 215.0
-grow_horizontal = 2
-size_flags_vertical = 0
-theme_override_constants/separation = 100
-alignment = 1
-
-[node name="C1" type="MarginContainer" parent="UI/TopBar"]
-layout_mode = 2
-
-[node name="TotalCells" type="Label" parent="UI/TopBar/C1"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("2_0xm2m")
-theme_override_font_sizes/font_size = 64
-text = "2048"
-horizontal_alignment = 1
-
-[node name="C2" type="VBoxContainer" parent="UI/TopBar"]
-layout_mode = 2
-
-[node name="ProgressBar" type="ProgressBar" parent="UI/TopBar/C2"]
-custom_minimum_size = Vector2(1000, 20)
-layout_mode = 2
-value = 50.0
-show_percentage = false
-
-[node name="CurrentGoal" type="Label" parent="UI/TopBar/C2"]
-custom_minimum_size = Vector2(900, 0)
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_fonts/font = ExtResource("2_0xm2m")
-theme_override_font_sizes/font_size = 40
-text = "Vous devez obtenir encore 3 méga-cellules pour former une ultra-cellule !"
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="C3" type="MarginContainer" parent="UI/TopBar"]
-layout_mode = 2
-
-[node name="Reset" type="TextureButton" parent="UI/TopBar/C3"]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
-tooltip_text = "reset"
-texture_normal = ExtResource("3_h2yge")
-texture_pressed = ExtResource("4_lquwl")
-texture_hover = ExtResource("4_1bvp3")
-stretch_mode = 0
+[node name="UI" parent="." instance=ExtResource("2_0xm2m")]
