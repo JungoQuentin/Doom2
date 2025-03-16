@@ -18,16 +18,12 @@ const nb_type2_spawn: int = 3;
 var coords: Dictionary[Vector2i, Cell]
 # List of the type (int) and center coords (Vec2) of cells
 # order matters for rendering
-var cells: Array[Cell] = [Cell.new(Vector2i(5, 5), Cell.CellType.TYPE1)];
+var cells: Array[Cell] = [Cell.new(CENTER, Cell.CellType.TYPE1)];
 # Coords of the tile under the mouse cursor
 var mouse_tile: Vector2i;
 
 func _ready() -> void:
 	$Camera2D.position = tile_to_pos(CENTER);
-	cells = [
-		Cell.new(Vector2i(1_000, 1_000), Cell.CellType.TYPE1)
-	];
-	cells.shuffle()
 	coords = Utils.cells_list_to_dict(cells)
 	start_auto_move_to_center()
 
