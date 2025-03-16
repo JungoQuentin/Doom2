@@ -1,3 +1,4 @@
+class_name Doom2
 extends Node2D
 
 const CENTER:= Vector2i(1_000, 1_000)
