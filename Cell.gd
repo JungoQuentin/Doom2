@@ -20,3 +20,13 @@ func _init(_center: Vector2i, _cell_type: CellType):
 	if cell_type == CellType.TYPE2:
 		for i in range(6): self.childs.append(Utils.moved_in_dir(center, i));
 	self.can_merge = false;
+
+func _to_string() -> String:
+	var type = "unknown"
+	match self.cell_type:
+		CellType.TYPE1:
+			type = "T1"
+		CellType.TYPE2:
+			type = "T2"
+	
+	return type + " " + str(self.center)
