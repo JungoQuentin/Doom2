@@ -1,63 +1,10 @@
 [gd_scene load_steps=3 format=3 uid="uid://dhj1rjgqrc2gj"]
 
 [ext_resource type="PackedScene" uid="uid://bvot1qpsbbms6" path="res://node_2d.tscn" id="1_ig7tw"]
-[ext_resource type="FontFile" uid="uid://c2evp0lb2lg4v" path="res://assets/fonts/CherryBombOne-Regular.ttf" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://3xsovfg5vqyt" path="res://ui.tscn" id="2_0xm2m"]
 
-[node name="Node2D" type="Node2D"]
+[node name="Main" type="Node2D"]
 
-[node name="Node2D" parent="." instance=ExtResource("1_ig7tw")]
+[node name="Game" parent="." instance=ExtResource("1_ig7tw")]
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 313.0
-grow_horizontal = 2
-theme_override_constants/margin_left = 50
-theme_override_constants/margin_top = 50
-theme_override_constants/margin_right = 50
-
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/MarginContainer"]
-layout_mode = 2
-theme_override_constants/separation = 200
-alignment = 1
-
-[node name="CenterContainer2" type="MarginContainer" parent="CanvasLayer/MarginContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TotalCells" type="Label" parent="CanvasLayer/MarginContainer/HBoxContainer/CenterContainer2"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_fonts/font = ExtResource("2_0xm2m")
-theme_override_font_sizes/font_size = 72
-text = "2048"
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MarginContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ProgressBar" type="ProgressBar" parent="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 20)
-layout_mode = 2
-value = 50.0
-show_percentage = false
-
-[node name="CurrentGoal" type="Label" parent="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer"]
-custom_minimum_size = Vector2(1300, 0)
-layout_mode = 2
-theme_override_fonts/font = ExtResource("2_0xm2m")
-theme_override_font_sizes/font_size = 56
-text = "Vous devez obtenir encore 3 méga-cellules pour former une ultra-cellule"
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="CenterContainer" type="MarginContainer" parent="CanvasLayer/MarginContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Button" type="Button" parent="CanvasLayer/MarginContainer/HBoxContainer/CenterContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Reset"
+[node name="UI" parent="." instance=ExtResource("2_0xm2m")]
