@@ -8,7 +8,7 @@ func _ready() -> void:
 	reset_button.pressed.connect(on_click_reset)
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	total_cells.text = str(game.coords.size())
 
 
