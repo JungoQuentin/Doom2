@@ -55,11 +55,13 @@ func _input(event: InputEvent) -> void:
 				spawn_cell(mouse_tile)
 			elif cell.cell_type == Cell.CellType.TYPE2:
 				spawn_many(nb_type2_spawn)
+			set_can_merge()
 			queue_redraw()
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(get_global_mouse_position());
 		if new_mouse_tile != mouse_tile:
 			mouse_tile = new_mouse_tile;
+			set_can_merge()
 			queue_redraw()
 
 
@@ -67,11 +69,6 @@ func spawn_many(q: int) -> void:
 	for _i in range(q):
 		await get_tree().create_timer(TIME_BETWEEN_MULTIPLE_SPAWN).timeout
 		spawn_cell(mouse_tile)
-
-
-func _physics_process(_delta: float) -> void:
-	set_can_merge(Cell.CellType.TYPE1)
-	set_can_merge(Cell.CellType.TYPE2)
 
 
 func _draw() -> void:
@@ -244,11 +241,15 @@ func try_to_move_to_center(cell: Cell) -> void:
 				move_cell(cell, direction)
 
 ## Set can_merge on all the cells of the first mergeable group
-func set_can_merge(type: Cell.CellType):
-	var cell_list: Array[Cell] = cells.filter(func(cell): return cell.cell_type == type)
-	if cell_list.is_empty():
+func set_can_merge():
+	for cell in cells:
+		cell.can_merge = false
+	if not coords.has(mouse_tile):
 		return
-	var first_cell: Cell = cell_list.pop_front()
+	var first_cell: Cell = coords[mouse_tile]
+	var type = first_cell.cell_type
+	var cell_list: Array[Cell] = cells.filter(func(cell): return cell.cell_type == type)
+	
 	var merge_neighbourgs: Array[Cell] = []
 	match type:
 		Cell.CellType.TYPE1:
