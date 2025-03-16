@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dhj1rjgqrc2gj"]
+[gd_scene load_steps=3 format=3 uid="uid://dhj1rjgqrc2gj"]
 
 [ext_resource type="PackedScene" uid="uid://bvot1qpsbbms6" path="res://node_2d.tscn" id="1_ig7tw"]
 [ext_resource type="FontFile" uid="uid://c2evp0lb2lg4v" path="res://assets/fonts/CherryBombOne-Regular.ttf" id="2_0xm2m"]

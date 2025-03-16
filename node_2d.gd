@@ -4,11 +4,13 @@ const CENTER:= Vector2i(1_000, 1_000)
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
 const overh_type1: float = 1.33;
-const overh_type2: float = 1.2;
+const overh_type2: float = 1.2 * 3;
+const overh_type3: float = 1.1 * 4.5;
 const cam_smoothing: float = 0.005;
 
 const type1_color: Color = Color.LIGHT_PINK;
 const type2_color: Color = Color.LIGHT_SALMON;
+const type3_color: Color = Color.LIGHT_SKY_BLUE;
 
 # Number of type1 cells spawned from type2 cell
 const nb_type2_spawn: int = 3;
@@ -17,7 +19,7 @@ const nb_type2_spawn: int = 3;
 var coords: Dictionary[Vector2i, Cell]
 # List of the type (int) and center coords (Vec2) of cells
 # order matters for rendering
-var cells: Array[Cell] = [Cell.new(Vector2i(5, 5), Cell.CellType.TYPE1)];
+var cells: Array[Cell]
 # Coords of the tile under the mouse cursor
 var mouse_tile: Vector2i;
 
@@ -77,27 +79,35 @@ func _draw() -> void:
 	"""
 	for cell in cells:
 		var pos = tile_to_pos(cell.center)
+		var color
+		var overh
 		if cell.cell_type == Cell.CellType.TYPE1:
-			var color = type1_color
-			if cell.center == mouse_tile:
-				color = color.lightened(0.2)
-			if cell.can_merge:
-				color = color.darkened(0.1)
-			draw_circle(pos, h/2 * overh_type1, color, true)
-			draw_circle(pos, h/2 * overh_type1, type1_color.darkened(0.2), false, 2)
+			color = type1_color
+			overh = overh_type1
 		elif cell.cell_type == Cell.CellType.TYPE2:
-			var color = type2_color
-			if cell.center == mouse_tile or mouse_tile in cell.childs:
-				color = color.lightened(0.2)
-			if cell.can_merge:
-				color = color.darkened(0.1)
-			draw_circle(pos, h/2 * 3 * overh_type2, color, true)
-			draw_circle(pos, h/2 * 3 * overh_type2, type2_color.darkened(0.2), false, 2)
+			color = type2_color
+			overh = overh_type2
+		elif cell.cell_type == Cell.CellType.TYPE3:
+			color = type3_color
+			overh = overh_type3
+		
+		if cell.center == mouse_tile:
+			color = color.lightened(0.2)
+		if cell.can_merge:
+			color = color.darkened(0.1)
+		draw_circle(pos, h/2 * overh, color, true)
+		draw_circle(pos, h/2 * overh, color.darkened(0.2), false, 2)
 	
-	for coord in coords:
+	for coord in coords: # DEBUG
 		var cell_type = coords[coord].cell_type
-		var col = Color.BEIGE if (cell_type == Cell.CellType.TYPE1) else Color.SADDLE_BROWN
-		draw_circle(tile_to_pos(coord), h/6, col, true)
+		var col
+		if cell_type == Cell.CellType.TYPE1:
+			col = Color.BEIGE
+		elif cell_type == Cell.CellType.TYPE2:
+			col = Color.SADDLE_BROWN
+		else:
+			col = Color.DODGER_BLUE
+		draw_circle(tile_to_pos(coord), h/8, col, true)
 
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
@@ -115,23 +125,24 @@ func merge(type: Cell.CellType) -> void:
 				coords.erase(cell.center)
 				cells.remove_at(cells.find(cell))
 
-	match type:
-		Cell.CellType.TYPE1:
-			for cell in mergeable_cells:
-				if not Utils.are_there_cells_around(cell.center, coords):
-					var new_cell = Cell.new(cell.center, Cell.CellType.TYPE2)
-					coords[cell.center] = new_cell;
-					for cell_child in new_cell.childs: coords[cell_child] = new_cell;
-					if cells.is_empty():
-						cells.append(new_cell);
-						return
-					var place_to_insert = 1;
-					if len(cells) > 1:
-						place_to_insert = randi() % (len(cells) - 1) + 1;
-					cells.insert(place_to_insert, new_cell);
-					return
-		Cell.CellType.TYPE2:
-			pass
+	for cell in mergeable_cells:
+		if not Utils.are_there_bigger_cells_around(cell.center, coords, cell.cell_type, cell):
+			var new_cell = Cell.new(cell.center, cell.cell_type + 1)
+			for child in new_cell.childs:
+				if coords.has(child) and coords[child].cell_type == Cell.CellType.TYPE1:
+					cells.remove_at(cells.find(coords[child]))
+					coords.erase(child)
+			coords[cell.center] = new_cell;
+			for cell_child in new_cell.childs:
+				coords[cell_child] = new_cell;
+			if cells.is_empty():
+				cells.append(new_cell);
+				return
+			var place_to_insert = 1;
+			if len(cells) > 1:
+				place_to_insert = randi() % (len(cells) - 1) + 1;
+			cells.insert(place_to_insert, new_cell);
+			return
 
 
 func spawn_cell(source_coords: Vector2i, cell_type: Cell.CellType):
@@ -205,11 +216,11 @@ func try_to_move_to_center(cell: Cell) -> void:
 
 	if cell.cell_type == Cell.CellType.TYPE1:
 		var new_position = Utils.moved_in_dir(cell.center, direction)
-		if !coords.has(new_position):
+		if !coords.has(new_position) and len(cells) > 4:
 			move_cell(cell, direction)
 	elif cell.cell_type == Cell.CellType.TYPE2:
 		var new_position = Utils.moved_in_dir(cell.center, direction)
-		if not Utils.are_there_type2_cells_around(new_position, coords, cell):
+		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
 			if randf() > 0.8:
 				move_cell(cell, direction)
 

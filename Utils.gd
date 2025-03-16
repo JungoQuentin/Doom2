@@ -68,12 +68,28 @@ static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
 	return result
 
 
-static func are_there_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell]) -> bool:
-	for i in range(6):
-		if coords.has(moved_in_dir(pos, i)):
-			return true
+static func are_there_bigger_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell], cell_type: Cell.CellType, self_cell) -> bool:
+	match cell_type:
+		Cell.CellType.TYPE1:
+			for i in range(6):
+				if coords.has(moved_in_dir(pos, i)):
+					var check_cell = coords[moved_in_dir(pos, i)]
+					if check_cell.cell_type > cell_type and check_cell != self_cell:
+						return true
+			return false
+		Cell.CellType.TYPE2:
+			for i in range(6): # first circle
+				if coords.has(moved_in_dir(pos, i)):
+					var check_cell = coords[moved_in_dir(pos, i)]
+					if check_cell.cell_type > cell_type and check_cell != self_cell:
+						return true
+				for j in range(3): # second circle 
+					if coords.has(moved_in_dir(moved_in_dir(pos, i), (i + j) % 6)):
+						var check_cell = coords[moved_in_dir(moved_in_dir(pos, i), (i + j) % 6)]
+						if check_cell.cell_type > cell_type and check_cell != self_cell:
+							return true
+			return false
 	return false
-
 
 static func are_there_type2_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell], self_cell: Cell) -> bool:
 	for i in range(6):
