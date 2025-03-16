@@ -19,6 +19,8 @@ const goals: Array[String] = [
 	"Obtenir 500 cellules",
 	"Obtenir 1000 cellules",
 	"Obtenir 2000 cellules",
+	"Obtenir 5000 cellules",
+	"Obtenir 100'000 cellules",
 ]
 
 
@@ -95,6 +97,14 @@ func _process(_delta: float) -> void:
 		progress_bar.value = tot
 		if tot >= 2000:
 			goal_step += 1
+	elif goal_step == 11:
+		progress_bar.max_value = 5000
+		progress_bar.value = tot
+		if tot >= 5000:
+			goal_step += 1
+	else:
+		progress_bar.max_value = 100_000
+		progress_bar.value = tot
 	
 	current_goal.text = goals[goal_step]
 
