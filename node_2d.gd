@@ -7,7 +7,7 @@ const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
 const overh_type1: float = 1.33;
 const overh_type2: float = 1.2 * 3;
-const overh_type3: float = 1.1 * 4.5;
+const overh_type3: float = 1.15 * 4.5;
 const cam_smoothing: float = 0.005;
 
 const type1_color: Color = Color.LIGHT_PINK;
@@ -101,7 +101,7 @@ func _draw() -> void:
 			color = color.darkened(0.1)
 		draw_circle(pos, h/2 * overh, color, true)
 		draw_circle(pos, h/2 * overh, color.darkened(0.2), false, 2)
-
+	"""
 	for coord in coords: # DEBUG
 		var cell_type = coords[coord].cell_type
 		var col
@@ -112,7 +112,7 @@ func _draw() -> void:
 		else:
 			col = Color.DODGER_BLUE
 		draw_circle(tile_to_pos(coord), h/8, col, true)
-
+	"""
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
 
@@ -184,7 +184,6 @@ func spawn_cell(source_coords: Vector2i):
 				cells.insert(place_to_insert, new_cell);
 				return
 		current_center = Utils.moved_in_dir(current_center, spawn_dir);
-		print(spawn_dir, current_center)
 
 func pos_to_tile(pos: Vector2) -> Vector2i:
 	var odd = int(pos.y / h - 0.5) % 2
