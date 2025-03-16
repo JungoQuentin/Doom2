@@ -1,10 +1,24 @@
-[gd_scene load_steps=6 format=3 uid="uid://3xsovfg5vqyt"]
+[gd_scene load_steps=8 format=3 uid="uid://3xsovfg5vqyt"]
 
 [ext_resource type="Script" uid="uid://i02x5ha2jljy" path="res://ui.gd" id="1_ibotj"]
 [ext_resource type="FontFile" uid="uid://c2evp0lb2lg4v" path="res://assets/fonts/CherryBombOne-Regular.ttf" id="1_nltto"]
 [ext_resource type="Texture2D" uid="uid://cchx8b0jtunqm" path="res://assets/img/reset-svgrepo-com.svg" id="2_ibotj"]
 [ext_resource type="Texture2D" uid="uid://dwlxksh3ja74w" path="res://assets/img/reset-svgrepo-com-click.svg" id="3_n5ude"]
 [ext_resource type="Texture2D" uid="uid://dfu821w7yg3yu" path="res://assets/img/reset-svgrepo-com-hover.svg" id="4_y4yjw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ibotj"]
+bg_color = Color(1, 1, 1, 0.423529)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n5ude"]
+bg_color = Color(0.670759, 0.938451, 0.914701, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="UI" type="CanvasLayer"]
 script = ExtResource("1_ibotj")
@@ -35,6 +49,8 @@ layout_mode = 2
 [node name="ProgressBar" type="ProgressBar" parent="TopBar/C2"]
 custom_minimum_size = Vector2(1000, 20)
 layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_ibotj")
+theme_override_styles/fill = SubResource("StyleBoxFlat_n5ude")
 value = 50.0
 show_percentage = false
 
@@ -44,7 +60,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_fonts/font = ExtResource("1_nltto")
 theme_override_font_sizes/font_size = 40
-text = "Vous devez obtenir encore 3 méga-cellules pour former une ultra-cellule !"
+text = "Dupliquez une cellule !"
 horizontal_alignment = 1
 autowrap_mode = 2
 
