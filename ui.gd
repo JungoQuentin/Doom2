@@ -50,60 +50,73 @@ func _process(_delta: float) -> void:
 		if tot >= 2:
 			progress_bar.value = 1
 			goal_step += 1
+			$Win.play()
 	elif goal_step == 1:
 		progress_bar.max_value = 12
 		progress_bar.value = tot
 		if tot >= 12:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 2:
 		progress_bar.value = tot
 		if nb_super_cells >= 1:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 3:
 		progress_bar.max_value = 50
 		progress_bar.value = tot
 		if tot >= 50:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 4:
 		progress_bar.max_value = 5
 		progress_bar.value = nb_super_cells
 		if nb_super_cells >= 5:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 5:
 		if nb_factory_cells >= 1:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 6:
 		progress_bar.max_value = 150
 		progress_bar.value = tot
 		if tot >= 150:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 7:
 		progress_bar.max_value = 5
 		progress_bar.value = nb_factory_cells
 		if nb_factory_cells >= 5:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 8:
 		progress_bar.max_value = 500
 		progress_bar.value = tot
 		if tot >= 500:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 9:
 		progress_bar.max_value = 1000
 		progress_bar.value = tot
 		if tot >= 1000:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 10:
 		progress_bar.max_value = 2000
 		progress_bar.value = tot
 		if tot >= 2000:
+			$Win.play()
 			goal_step += 1
 	elif goal_step == 11:
 		progress_bar.max_value = 5000
 		progress_bar.value = tot
 		if tot >= 5000:
+			$Win.play()
 			goal_step += 1
 	else:
 		progress_bar.max_value = 100_000
+		#$Win.play()
 		progress_bar.value = tot
 	
 	current_goal.text = goals[goal_step]
