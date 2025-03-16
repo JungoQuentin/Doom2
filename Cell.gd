@@ -2,7 +2,11 @@ class_name Cell
 
 enum CellType{ TYPE1, TYPE2 }
 
-const CELLS_N_FOR_TYPE2 = 7
+## Nombre de cellule qu'il faut pour passer au type suivant
+const N_CELL_FOR_TYPE: Dictionary[CellType, int] = {
+	CellType.TYPE1: 7,
+	CellType.TYPE2: 4,
+}
 
 var center: Vector2i;
 var cell_type: CellType;
@@ -16,3 +20,13 @@ func _init(_center: Vector2i, _cell_type: CellType):
 	if cell_type == CellType.TYPE2:
 		for i in range(6): self.childs.append(Utils.moved_in_dir(center, i));
 	self.can_merge = false;
+
+func _to_string() -> String:
+	var type = "unknown"
+	match self.cell_type:
+		CellType.TYPE1:
+			type = "T1"
+		CellType.TYPE2:
+			type = "T2"
+	
+	return type + " " + str(self.center)
