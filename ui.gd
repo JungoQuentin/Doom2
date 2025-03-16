@@ -1,8 +1,8 @@
 extends CanvasLayer
 
-@onready var total_cells: Label = $TopBar/C1/TotalCells
-@onready var current_goal: Label = $TopBar/C2/CurrentGoal
-@onready var progress_bar: ProgressBar = $TopBar/C2/ProgressBar
+@onready var total_cells: Label = $PanelContainer/MarginContainer/TopBar/C1/TotalCells
+@onready var current_goal: Label = $PanelContainer/MarginContainer/TopBar/C2/CurrentGoal
+@onready var progress_bar: ProgressBar = $PanelContainer/MarginContainer/TopBar/C2/ProgressBar
 @onready var game: Doom2 = $"../Game"
 
 var goal_step: int = 0;
@@ -23,7 +23,7 @@ const goals: Array[String] = [
 
 
 func _ready() -> void:
-	var reset_button: TextureButton = $TopBar/C3/Reset
+	var reset_button: TextureButton = $PanelContainer/MarginContainer/TopBar/C3/Reset
 	reset_button.pressed.connect(on_click_reset)
 
 
