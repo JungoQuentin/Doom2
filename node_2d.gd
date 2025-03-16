@@ -7,7 +7,7 @@ const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
 const overh_type1: float = 1.35;
 const overh_type2: float = 1.25 * 3;
-const overh_type3: float = 1.3 * 4.5;
+const overh_type3: float = 1.33 * 4.5;
 const cam_smoothing: float = 0.005;
 
 const type1_color: Color = Color.LIGHT_PINK;
@@ -36,7 +36,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	b += delta;
+	b += delta * 4;
 	queue_redraw()
 	
 	if cells.is_empty(): return
@@ -88,28 +88,26 @@ func _draw() -> void:
 		var pos = tile_to_pos(cell.center)
 		var color
 		var overh
-		var offset
 		if cell.cell_type == Cell.CellType.TYPE1:
 			color = type1_color
 			overh = overh_type1
-			offset = 4 * Vector2(sin(2 * b + 0.3) - cos(b + 0.1), cos(b) - sin(1.5 * b + 0.8))
 		elif cell.cell_type == Cell.CellType.TYPE2:
 			color = type2_color
 			overh = overh_type2
-			offset = 4 * Vector2(sin(1.5 * b + 0.6) - cos(b*2 + 0.3), cos(b) - sin(1.5 * b + 0.5))
 		elif cell.cell_type == Cell.CellType.TYPE3:
 			color = type3_color
 			overh = overh_type3
-			offset = 4 * Vector2(sin(2 * b + 0.1) - cos(b + 0.2), cos(b) - sin(3.5 * b + 0.2))
 		
 		var col = color
 		if cell.can_merge or cell.center == mouse_tile or mouse_tile in cell.childs:
 			col = color.darkened(0.1)
 		
+		var offset = 3 * cell.rnd[0] * Vector2(cos((cell.rnd[1] - 0.5) * b), sin((cell.rnd[1] - 0.5) * b))
+		var offset_center = offset + 4 * cell.rnd[2] * Vector2(-cos((cell.rnd[3] - 0.5) * b / 2), sin((cell.rnd[3] - 0.5) * b / 2))
 		
-		draw_circle(pos, h/2 * overh, col, true)
-		draw_circle(pos, h/2 * overh, color.darkened(0.1), false, 3)
-		draw_circle(pos + offset, h/8 * overh, color.darkened(0.15), true)
+		draw_circle(pos + offset * overh, h/2 * overh, col, true)
+		draw_circle(pos + offset * overh, h/2 * overh, color.darkened(0.1), false, 3)
+		draw_circle(pos + offset_center * overh, h/8 * overh, color.darkened(0.15), true)
 	"""
 	for coord in coords: # DEBUG
 		var cell_type = coords[coord].cell_type
@@ -128,7 +126,7 @@ func _draw() -> void:
 func start_factories() -> void:
 	var timer = Timer.new()
 	add_child(timer)
-	timer.wait_time = 2.0 # une cellule type1 toutes les 2 secondes
+	timer.wait_time = 0.8 # une cellule type1 toutes les 2 secondes
 	timer.timeout.connect(factory)
 	timer.autostart = true
 	timer.start()
