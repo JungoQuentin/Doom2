@@ -59,6 +59,10 @@ static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
 	for cell in base:
 		if cell.cell_type == Cell.CellType.TYPE1:
 			result[cell.center] = cell
+		elif cell.cell_type == Cell.CellType.TYPE2:
+			result[cell.center] = cell
+			for child in cell.childs:
+				result[child] = cell
 		else:
 			pass # TODO logique de detetion de tous les tiles que rempli une grosse cell
 	return result
@@ -71,9 +75,10 @@ static func are_there_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, C
 	return false
 
 
-static func are_there_type2_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell]) -> bool:
+static func are_there_type2_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell], self_cell: Cell) -> bool:
 	for i in range(6):
 		if coords.has(moved_in_dir(pos, i)):
-			if coords[moved_in_dir(pos, i)].cell_type == Cell.CellType.TYPE2:
+			var check_cell = coords[moved_in_dir(pos, i)]
+			if check_cell.cell_type == Cell.CellType.TYPE2 and check_cell != self_cell:
 				return true
 	return false

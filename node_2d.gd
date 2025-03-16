@@ -69,11 +69,12 @@ func _physics_process(_delta: float) -> void:
 
 
 func _draw() -> void:
+	"""
 	for i in range(980, 1020):
 		for j in range(980, 1020):
 			var pos = tile_to_pos(Vector2i(i, j))
 			draw_circle(pos, h/2, Color.PALE_VIOLET_RED.lightened(0.6), false, 2)
-
+	"""
 	for cell in cells:
 		var pos = tile_to_pos(cell.center)
 		if cell.cell_type == Cell.CellType.TYPE1:
@@ -84,12 +85,17 @@ func _draw() -> void:
 				color = color.darkened(0.1)
 			draw_circle(pos, h/2 * overh_type1, color, true)
 			draw_circle(pos, h/2 * overh_type1, type1_color.darkened(0.2), false, 2)
-		elif  cell.cell_type == Cell.CellType.TYPE2:
+		elif cell.cell_type == Cell.CellType.TYPE2:
 			var color = type2_color
 			if cell.center == mouse_tile or mouse_tile in cell.childs:
 				color = color.lightened(0.2)
 			draw_circle(pos, h/2 * 3 * overh_type2, color, true)
 			draw_circle(pos, h/2 * 3 * overh_type2, type2_color.darkened(0.2), false, 2)
+	
+	for coord in coords:
+		var cell_type = coords[coord].cell_type
+		var col = Color.BEIGE if (cell_type == Cell.CellType.TYPE1) else Color.SADDLE_BROWN
+		draw_circle(tile_to_pos(coord), h/6, col, true)
 
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
 
@@ -156,22 +162,27 @@ func start_auto_move_to_center() -> void:
 	timer.start()
 
 ## Bouge une cellule vers sa new_position
-func move_cell(cell: Cell, new_position: Vector2i) -> void:
+func move_cell(cell: Cell, dir: Utils.Direction) -> void:
+	var new_position = Utils.moved_in_dir(cell.center, dir)
 	if cell.cell_type == Cell.CellType.TYPE1:
 		coords.erase(cell.center)
 		coords[new_position] = cell
 		cell.center = new_position
 	elif cell.cell_type == Cell.CellType.TYPE2:
+		for child in cell.childs:
+			coords.erase(child)
+			var shifted_child = Utils.moved_in_dir(child, dir)
+			if coords.has(shifted_child) and coords[shifted_child].cell_type == Cell.CellType.TYPE1:
+				cells.remove_at(cells.find(coords[shifted_child]))
+				coords.erase(shifted_child)
 		coords.erase(cell.center)
-		for i in range(6):
-			coords.erase(Utils.moved_in_dir(cell.center, i))
 		coords[new_position] = cell
-		for i in range(6):
-			coords[Utils.moved_in_dir(cell.center, i)] = cell
 		cell.center = new_position
-		cell.childs.clear()
+		for child in cell.childs:
+			coords[Utils.moved_in_dir(child, dir)] = cell
 		for i in range(6):
-			cell.childs.append(Utils.moved_in_dir(cell.center, i))
+			cell.childs[i] = Utils.moved_in_dir(cell.childs[i], dir)
+	
 	queue_redraw()
 
 ## Bouge une cellule vers le centre si possible
@@ -185,11 +196,12 @@ func try_to_move_to_center(cell: Cell) -> void:
 	if cell.cell_type == Cell.CellType.TYPE1:
 		var new_position = Utils.moved_in_dir(cell.center, direction)
 		if !coords.has(new_position):
-			move_cell(cell, new_position)
+			move_cell(cell, direction)
 	elif cell.cell_type == Cell.CellType.TYPE2:
 		var new_position = Utils.moved_in_dir(cell.center, direction)
-		if not Utils.are_there_type2_cells_around(new_position, coords):
-			move_cell(cell, new_position)
+		if not Utils.are_there_type2_cells_around(new_position, coords, cell):
+			if randf() > 0.8:
+				move_cell(cell, direction)
 
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge(type: Cell.CellType):
