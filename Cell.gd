@@ -1,12 +1,13 @@
 class_name Cell
 
-enum CellType{ TYPE1, TYPE2, TYPE3 }
+enum CellType { TYPE1, TYPE2, TYPE3, TYPE4 }
 
 ## Nombre de cellule qu'il faut pour passer au type suivant
 const N_CELL_FOR_TYPE: Dictionary[int, int] = {
-	CellType.TYPE1: 12,
-	CellType.TYPE2: 6,
-	CellType.TYPE3: 10,
+	CellType.TYPE1: 3,
+	CellType.TYPE2: 3,
+	CellType.TYPE3: 3,
+	CellType.TYPE4: 3,
 }
 
 var center: Vector2i;

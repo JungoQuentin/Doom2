@@ -8,11 +8,13 @@ const h: float = 50.0; # Cell size
 const overh_type1: float = 1.35;
 const overh_type2: float = 1.25 * 3;
 const overh_type3: float = 1.33 * 4.5;
+const overh_type4: float = 1.3 * 4.5;
 const cam_smoothing: float = 0.005;
 
 const type1_color: Color = Color.LIGHT_PINK;
 var type2_color: Color = Color.LIGHT_SALMON.lerp(Color.LIGHT_PINK, 0.5);
 var type3_color: Color = Color.PLUM.lerp(Color.LIGHT_PINK, 0.5);
+var type4_color: Color = Color.GREEN.lerp(Color.LIGHT_PINK, 0.5);
 
 # Number of type1 cells spawned from type2 cell
 const nb_type2_spawn: int = 3;
@@ -63,6 +65,8 @@ func _input(event: InputEvent) -> void:
 				spawn_many(nb_type2_spawn)
 			elif cell.cell_type == Cell.CellType.TYPE3:
 				spawn_many(nb_type3_spawn)
+			elif cell.cell_type == Cell.CellType.TYPE4:
+				print('set')
 			set_can_merge()
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(get_global_mouse_position());
@@ -97,6 +101,9 @@ func _draw() -> void:
 		elif cell.cell_type == Cell.CellType.TYPE3:
 			color = type3_color
 			overh = overh_type3
+		elif cell.cell_type == Cell.CellType.TYPE4:
+			color = type4_color
+			overh = overh_type4
 		
 		var col = color
 		if cell.can_merge or cell.center == mouse_tile or mouse_tile in cell.childs:
@@ -137,6 +144,9 @@ func factory():
 		if cell.cell_type == Cell.CellType.TYPE3:
 			await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
 			spawn_cell(cell.center)
+		elif cell.cell_type == Cell.CellType.TYPE4:
+			await get_tree().create_timer(randf_range(0.01, 0.01)).timeout
+			spawn_cell(cell.center)
 
 
 func merge(type: Cell.CellType) -> void:
@@ -154,7 +164,13 @@ func merge(type: Cell.CellType) -> void:
 				coords.erase(cell.center)
 				cells.remove_at(cells.find(cell))
 				$PopT3.play()
-
+			Cell.CellType.TYPE3:
+				for child in cell.childs:
+					coords.erase(child)
+				coords.erase(cell.center)
+				cells.remove_at(cells.find(cell))
+				$PopT3.play()
+		
 	for cell in mergeable_cells:
 		if not Utils.are_there_bigger_cells_around(cell.center, coords, cell.cell_type, cell):
 			var new_cell = Cell.new(cell.center, cell.cell_type + 1)
@@ -246,6 +262,8 @@ func move_cell(cell: Cell, dir: Utils.Direction) -> void:
 			coords[Utils.moved_in_dir(child, dir)] = cell
 		for i in range(18):
 			cell.childs[i] = Utils.moved_in_dir(cell.childs[i], dir)
+	elif cell.cell_type == Cell.CellType.TYPE4:
+		pass # TODO move_cell
 
 ## Bouge une cellule vers le centre si possible
 func try_to_move_to_center(cell: Cell) -> void:
@@ -267,7 +285,11 @@ func try_to_move_to_center(cell: Cell) -> void:
 		var new_position = Utils.moved_in_dir(cell.center, direction)
 		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
 			move_cell(cell, direction)
-
+	elif cell.cell_type == Cell.CellType.TYPE4:
+		var new_position = Utils.moved_in_dir(cell.center, direction)
+		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
+			move_cell(cell, direction)
+	
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge():
 	for cell in cells:
@@ -284,6 +306,9 @@ func set_can_merge():
 			get_recursive_merge_neighbours(first_cell, cell_list, merge_neighbourgs)
 		Cell.CellType.TYPE2:
 			get_recursive_merge_neighbours_type2(first_cell, cell_list, merge_neighbourgs)
+		Cell.CellType.TYPE3:
+			get_recursive_merge_neighbours_type2(first_cell, cell_list, merge_neighbourgs)
+		
 	if len(merge_neighbourgs) + 1 < Cell.N_CELL_FOR_TYPE[type]:
 		return # not enought neighbourgs
 	first_cell.can_merge = true
