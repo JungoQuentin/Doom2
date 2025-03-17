@@ -14,7 +14,7 @@ const cam_smoothing: float = 0.005;
 const type1_color: Color = Color.LIGHT_PINK;
 var type2_color: Color = Color.LIGHT_SALMON.lerp(Color.LIGHT_PINK, 0.5);
 var type3_color: Color = Color.PLUM.lerp(Color.LIGHT_PINK, 0.5);
-var type4_color: Color = Color.GREEN.lerp(Color.LIGHT_PINK, 0.5);
+var type4_color: Color = Color.BLUE.lerp(Color.LIGHT_PINK, 0.5);
 
 # Number of type1 cells spawned from type2 cell
 const nb_type2_spawn: int = 3;
@@ -144,9 +144,11 @@ func factory():
 		if cell.cell_type == Cell.CellType.TYPE3:
 			await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
 			spawn_cell(cell.center)
+		"""
 		elif cell.cell_type == Cell.CellType.TYPE4:
 			await get_tree().create_timer(randf_range(0.01, 0.01)).timeout
 			spawn_cell(cell.center)
+		"""
 
 
 func merge(type: Cell.CellType) -> void:
@@ -285,10 +287,12 @@ func try_to_move_to_center(cell: Cell) -> void:
 		var new_position = Utils.moved_in_dir(cell.center, direction)
 		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
 			move_cell(cell, direction)
+	"""
 	elif cell.cell_type == Cell.CellType.TYPE4:
 		var new_position = Utils.moved_in_dir(cell.center, direction)
 		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
 			move_cell(cell, direction)
+	"""
 	
 ## Set can_merge on all the cells of the first mergeable group
 func set_can_merge():
