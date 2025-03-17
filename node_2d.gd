@@ -5,28 +5,17 @@ const CENTER:= Vector2i(1_000, 1_000)
 const TIME_BETWEEN_MULTIPLE_SPAWN = 0.05
 const hex_ratio: float = 2/sqrt(3);
 const h: float = 50.0; # Cell size
-const overh_type1: float = 1.35;
-const overh_type2: float = 1.25 * 3;
-const overh_type3: float = 1.33 * 4.5;
-const overh_type4: float = 1.3 * 4.5;
 const cam_smoothing: float = 0.005;
 
-const type1_color: Color = Color.LIGHT_PINK;
-var type2_color: Color = Color.LIGHT_SALMON.lerp(Color.LIGHT_PINK, 0.5);
-var type3_color: Color = Color.PLUM.lerp(Color.LIGHT_PINK, 0.5);
-var type4_color: Color = Color.BLUE.lerp(Color.LIGHT_PINK, 0.5);
 
-# Number of type1 cells spawned from type2 cell
-const nb_type2_spawn: int = 3;
-const nb_type3_spawn: int = 5;
-
-# Stores the coods (Vec2) of every filled tile
+## Stores the coods (Vec2i) of every filled tile
 var coords: Dictionary[Vector2i, Cell]
-# List of the type (int) and center coords (Vec2) of cells
-# order matters for rendering
-var cells: Array[Cell] = [Cell.new(CENTER, Cell.CellType.TYPE1)];
-# Coords of the tile under the mouse cursor
+## List of the Cells (order matters for rendering)
+var cells: Array[Cell] = [Cell.new(CENTER, 0)];
+## Coords of the tile under the mouse cursor
 var mouse_tile: Vector2i;
+## List of mergeable cells
+var mergeable_cells: Array[Cell] = []
 
 var b: float = 0.0;
 
@@ -53,32 +42,29 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		mouse_tile = pos_to_tile(get_global_mouse_position());
-		if coords.has(mouse_tile):
-			var cell = coords[mouse_tile];
-			if cell.can_merge:
-				merge(cell.cell_type)
-			elif cell.cell_type == Cell.CellType.TYPE1:
-				spawn_cell(mouse_tile)
-			elif cell.cell_type == Cell.CellType.TYPE2:
-				spawn_many(nb_type2_spawn)
-			elif cell.cell_type == Cell.CellType.TYPE3:
-				spawn_many(nb_type3_spawn)
-			elif cell.cell_type == Cell.CellType.TYPE4:
-				print('set')
-			set_can_merge()
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			mouse_tile = pos_to_tile(get_global_mouse_position());
+			if coords.has(mouse_tile):
+				var cell = coords[mouse_tile];
+				if cell in mergeable_cells:
+					merge(cell.kind)
+				else:
+					spawn_many(Cell.NB_SPAWN_CELL[cell.kind])
+		else:
+			Merge.set_can_merge(cells, coords, mouse_tile, mergeable_cells)
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(get_global_mouse_position());
 		if new_mouse_tile != mouse_tile:
 			mouse_tile = new_mouse_tile;
-			set_can_merge()
+			Merge.set_can_merge(cells, coords, mouse_tile, mergeable_cells)
 
 
 func spawn_many(q: int) -> void:
 	for _i in range(q):
 		await get_tree().create_timer(TIME_BETWEEN_MULTIPLE_SPAWN).timeout
-		spawn_cell(mouse_tile)
+		spawn_cell(mouse_tile, 0)
+		$PopT1.play()
 
 
 func _draw() -> void:
@@ -89,39 +75,26 @@ func _draw() -> void:
 			draw_circle(pos, h/2, Color.PALE_VIOLET_RED.lightened(0.6), false, 2)
 	"""
 	for cell in cells:
-		var pos = tile_to_pos(cell.center)
-		var color
-		var overh
-		if cell.cell_type == Cell.CellType.TYPE1:
-			color = type1_color
-			overh = overh_type1
-		elif cell.cell_type == Cell.CellType.TYPE2:
-			color = type2_color
-			overh = overh_type2
-		elif cell.cell_type == Cell.CellType.TYPE3:
-			color = type3_color
-			overh = overh_type3
-		elif cell.cell_type == Cell.CellType.TYPE4:
-			color = type4_color
-			overh = overh_type4
-		
-		var col = color
-		if cell.can_merge or cell.center == mouse_tile or mouse_tile in cell.childs:
-			col = color.darkened(0.1)
+		var pos = tile_to_pos(cell.center);
+		var size = Cell.size[cell.kind];
+		var color = Cell.color[cell.kind];
+		var fill_color = color;
+		if cell in mergeable_cells or mouse_tile in cell.childs:
+			fill_color = color.darkened(0.1);
 		
 		var offset = 3 * cell.rnd[0] * Vector2(cos((cell.rnd[1] - 0.5) * b), sin((cell.rnd[1] - 0.5) * b))
 		var offset_center = offset + 4 * cell.rnd[2] * Vector2(-cos((cell.rnd[3] - 0.5) * b / 2), sin((cell.rnd[3] - 0.5) * b / 2))
 		
-		draw_circle(pos + offset * overh, h/2 * overh, col, true)
-		draw_circle(pos + offset * overh, h/2 * overh, color.darkened(0.1), false, 3)
-		draw_circle(pos + offset_center * overh, h/8 * overh, color.darkened(0.15), true)
+		draw_circle(pos + offset * size, h/2 * size, fill_color, true)
+		draw_circle(pos + offset * size, h/2 * size, color.darkened(0.1), false, 3)
+		draw_circle(pos + offset_center * size, h/8 * size, color.darkened(0.15), true)
 	"""
 	for coord in coords: # DEBUG
-		var cell_type = coords[coord].cell_type
+		var kind = coords[coord].kind
 		var col
-		if cell_type == Cell.CellType.TYPE1:
+		if kind == 1:
 			col = Color.BEIGE
-		elif cell_type == Cell.CellType.TYPE2:
+		elif kind == 2:
 			col = Color.SADDLE_BROWN
 		else:
 			col = Color.DODGER_BLUE
@@ -141,43 +114,37 @@ func start_factories() -> void:
 
 func factory():
 	for cell in cells.duplicate():
-		if cell.cell_type == Cell.CellType.TYPE3:
+		if cell.kind == 3:
 			await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
-			spawn_cell(cell.center)
-		"""
-		elif cell.cell_type == Cell.CellType.TYPE4:
-			await get_tree().create_timer(randf_range(0.01, 0.01)).timeout
-			spawn_cell(cell.center)
-		"""
+			spawn_cell(cell.center, 0)
+			$PopT1.play()
 
 
-func merge(type: Cell.CellType) -> void:
-	var mergeable_cells: Array[Cell] = cells.filter(func(cell): return cell.can_merge and cell.cell_type == type)
-
+func merge(kind: int) -> void:
 	for cell in mergeable_cells:
-		match type:
-			Cell.CellType.TYPE1:
+		match kind:
+			0:
 				coords.erase(cell.center)
 				cells.remove_at(cells.find(cell))
 				$PopT2.play()
-			Cell.CellType.TYPE2:
+			1:
 				for child in cell.childs:
 					coords.erase(child)
 				coords.erase(cell.center)
 				cells.remove_at(cells.find(cell))
-				$PopT3.play()
-			Cell.CellType.TYPE3:
+				$PopT2.play()
+			2:
 				for child in cell.childs:
 					coords.erase(child)
 				coords.erase(cell.center)
 				cells.remove_at(cells.find(cell))
-				$PopT3.play()
-		
+				$PopT2.play()
+	
 	for cell in mergeable_cells:
-		if not Utils.are_there_bigger_cells_around(cell.center, coords, cell.cell_type, cell):
-			var new_cell = Cell.new(cell.center, cell.cell_type + 1)
+		if not Utils.are_there_bigger_or_same_cells_around(cell.center, coords, cell.kind + 1, cell):
+			var new_cell = Cell.new(cell.center, cell.kind + 1)
 			for child in new_cell.childs:
-				if coords.has(child) and coords[child].cell_type == Cell.CellType.TYPE1:
+				if coords.has(child) and coords[child].kind == 0:
 					cells.remove_at(cells.find(coords[child]))
 					coords.erase(child)
 			coords[cell.center] = new_cell;
@@ -193,22 +160,22 @@ func merge(type: Cell.CellType) -> void:
 			return
 
 
-func spawn_cell(source_coords: Vector2i):
+func spawn_cell(source_coords: Vector2i, kind: int):
 	var spawn_dir = randi() % 6; # Choose 1 of 6 random directions (spawn_dir)
 	var current_center = source_coords;
-	$PopT1.play()
 	while true:
-		for i in range(6):
-			var check_tile = Utils.moved_in_dir(current_center, (spawn_dir + i) % 6);
-			if not coords.has(check_tile):
-				var new_cell = Cell.new(check_tile, Cell.CellType.TYPE1)
-				coords[check_tile] = new_cell;
-				var place_to_insert = 1;
-				if len(cells) > 1:
-					place_to_insert = randi() % (len(cells) - 1) + 1;
-				cells.insert(place_to_insert, new_cell);
-				return
-		current_center = Utils.moved_in_dir(current_center, spawn_dir);
+		var dir = randi_range(5, 7);
+		var position = Utils.moved_in_dir(current_center, (spawn_dir + dir) % 6);
+		if not Utils.are_there_cells_around(position, coords, kind):
+			var new_cell = Cell.new(position, 0)
+			for child in new_cell.childs:
+				coords[child] = new_cell;
+			var place_to_insert = 1;
+			if len(cells) > 1:
+				place_to_insert = randi() % (len(cells) - 1) + 1;
+			cells.insert(place_to_insert, new_cell);
+			return
+		current_center = Utils.moved_in_dir(current_center, (spawn_dir + dir) % 6);
 
 func pos_to_tile(pos: Vector2) -> Vector2i:
 	var odd = int(pos.y / h - 0.5) % 2
@@ -221,7 +188,7 @@ func tile_to_pos(tile_coords: Vector2i) -> Vector2:
 
 ## Lance la logique de deplacement automatique vers le centre
 ## Un timer qui run toutes les x secondes
-func start_auto_move_to_center() -> void:
+func start_auto_move_to_center():
 	var timer = Timer.new()
 	add_child(timer)
 	timer.wait_time = 0.05
@@ -229,150 +196,36 @@ func start_auto_move_to_center() -> void:
 	timer.autostart = true
 	timer.start()
 
-## Bouge une cellule vers sa new_position
-func move_cell(cell: Cell, dir: Utils.Direction) -> void:
-	var new_position = Utils.moved_in_dir(cell.center, dir)
-	if cell.cell_type == Cell.CellType.TYPE1:
-		coords.erase(cell.center)
-		coords[new_position] = cell
-		cell.center = new_position
-	elif cell.cell_type == Cell.CellType.TYPE2:
-		for child in cell.childs:
-			coords.erase(child)
-			var shifted_child = Utils.moved_in_dir(child, dir)
-			if coords.has(shifted_child) and coords[shifted_child].cell_type == Cell.CellType.TYPE1:
-				cells.remove_at(cells.find(coords[shifted_child]))
-				coords.erase(shifted_child)
-		coords.erase(cell.center)
-		coords[new_position] = cell
-		cell.center = new_position
-		for child in cell.childs:
-			coords[Utils.moved_in_dir(child, dir)] = cell
-		for i in range(6):
-			cell.childs[i] = Utils.moved_in_dir(cell.childs[i], dir)
-	elif cell.cell_type == Cell.CellType.TYPE3:
-		for child in cell.childs:
-			coords.erase(child)
-			var shifted_child = Utils.moved_in_dir(child, dir)
-			if coords.has(shifted_child) and coords[shifted_child].cell_type == Cell.CellType.TYPE1:
-				cells.remove_at(cells.find(coords[shifted_child]))
-				coords.erase(shifted_child)
-		coords.erase(cell.center)
-		coords[new_position] = cell
-		cell.center = new_position
-		for child in cell.childs:
-			coords[Utils.moved_in_dir(child, dir)] = cell
-		for i in range(18):
-			cell.childs[i] = Utils.moved_in_dir(cell.childs[i], dir)
-	elif cell.cell_type == Cell.CellType.TYPE4:
-		pass # TODO move_cell
-
 ## Bouge une cellule vers le centre si possible
-func try_to_move_to_center(cell: Cell) -> void:
-	if cell.center == CENTER:
+func try_to_move_to_center(cell: Cell):
+	if cell.center == CENTER or len(cells) <= 7:
 		return
 	var angle = rad_to_deg(Vector2(CENTER - cell.center).angle());
 	angle += (randf() - 0.5) * 90;
 	var direction = Utils.angle_to_direction(angle);
-
-	if cell.cell_type == Cell.CellType.TYPE1:
-		var new_position = Utils.moved_in_dir(cell.center, direction)
-		if !coords.has(new_position) and len(cells) > 4:
-			move_cell(cell, direction)
-	elif cell.cell_type == Cell.CellType.TYPE2:
-		var new_position = Utils.moved_in_dir(cell.center, direction)
-		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
-			move_cell(cell, direction)
-	elif cell.cell_type == Cell.CellType.TYPE3:
-		var new_position = Utils.moved_in_dir(cell.center, direction)
-		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
-			move_cell(cell, direction)
-	"""
-	elif cell.cell_type == Cell.CellType.TYPE4:
-		var new_position = Utils.moved_in_dir(cell.center, direction)
-		if not Utils.are_there_bigger_cells_around(new_position, coords, cell.cell_type - 1, cell):
-			move_cell(cell, direction)
-	"""
+	var new_position = Utils.moved_in_dir(cell.center, direction)
 	
-## Set can_merge on all the cells of the first mergeable group
-func set_can_merge():
-	for cell in cells:
-		cell.can_merge = false
-	if not coords.has(mouse_tile):
+	if not Utils.are_there_bigger_or_same_cells_around(new_position, coords, cell.kind, cell):
+		move_cell(cell, direction)
+
+## Déplace une cellule dans une direction
+func move_cell(cell: Cell, dir: Utils.Direction):
+	var victims = [];
+	for child_index in cell.childs.size():
+		var moved_child = Utils.moved_in_dir(cell.childs[child_index], dir);
+		if coords.has(moved_child) and coords[moved_child].kind < cell.kind:
+			victims.append(coords[moved_child].kind)
+			delete_cell(moved_child);
+		cell.childs[child_index] = Utils.moved_in_dir(cell.childs[child_index], dir);
+	for victim in victims:
+		spawn_cell(cell.center, victim)
+	cell.center = Utils.moved_in_dir(cell.center, dir)
+
+## Delete the cell and corresponding coords at a given position
+func delete_cell(position: Vector2i):
+	if not coords.has(position):
 		return
-	var first_cell: Cell = coords[mouse_tile]
-	var type = first_cell.cell_type
-	var cell_list: Array[Cell] = cells.filter(func(cell): return cell.cell_type == type)
-	
-	var merge_neighbourgs: Array[Cell] = []
-	match type:
-		Cell.CellType.TYPE1:
-			get_recursive_merge_neighbours(first_cell, cell_list, merge_neighbourgs)
-		Cell.CellType.TYPE2:
-			get_recursive_merge_neighbours_type2(first_cell, cell_list, merge_neighbourgs)
-		Cell.CellType.TYPE3:
-			get_recursive_merge_neighbours_type2(first_cell, cell_list, merge_neighbourgs)
-		
-	if len(merge_neighbourgs) + 1 < Cell.N_CELL_FOR_TYPE[type]:
-		return # not enought neighbourgs
-	first_cell.can_merge = true
-	for cell in merge_neighbourgs:
-		cell.can_merge = true
-
-func get_recursive_merge_neighbours(cell: Cell, cell_list: Array[Cell], merge_neighbourgs: Array[Cell], dbg_rec_level:= 0) :
-	var new_cells = Utils.ALL_DIRECTION \
-		.map(func(dir): return Utils.moved_in_dir(cell.center, dir)) \
-		.filter(func(pos): return coords.has(pos) and cell_list.has(coords[pos])) \
-		.map(func(pos): return coords[pos])
-
-	var added_cells_to_check: Array[Cell] = []
-
-	for new_cell in new_cells:
-		cell_list.remove_at(cell_list.find(new_cell))
-		merge_neighbourgs.push_back(new_cell)
-		added_cells_to_check.push_back(new_cell)
-		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
-			return
-
-	for new_cell in added_cells_to_check:
-		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
-			return
-		get_recursive_merge_neighbours(
-			new_cell,
-			cell_list,
-			merge_neighbourgs,
-			dbg_rec_level + 1
-		)
-		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
-			return
-
-## Pour le type2, je dois detecter les enfants allentours, et voir leur parent
-func get_recursive_merge_neighbours_type2(cell: Cell, cell_list: Array[Cell], merge_neighbourgs: Array[Cell], dbg_rec_level:= 0) :
-	var new_cells_to_check: Array[Cell] = []
+	var cell = coords[position];
 	for child in cell.childs:
-		for dir in Utils.ALL_DIRECTION:
-			var pos = Utils.moved_in_dir(child, dir)
-			## avec le coords[pos], je get direct le parent, meme si je suis sur la pos de l'enfant
-			if coords.has(pos) and cell_list.has(coords[pos]) and !new_cells_to_check.has(coords[pos]):
-				new_cells_to_check.push_back(coords[pos])
-
-	var added_cells_to_check: Array[Cell] = []
-
-	for new_cell in new_cells_to_check:
-		cell_list.remove_at(cell_list.find(new_cell))
-		merge_neighbourgs.push_back(new_cell)
-		added_cells_to_check.push_back(new_cell)
-		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
-			return
-
-	for new_cell in added_cells_to_check:
-		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
-			return
-		get_recursive_merge_neighbours_type2(
-			new_cell,
-			cell_list,
-			merge_neighbourgs,
-			dbg_rec_level + 1
-		)
-		if len(merge_neighbourgs) + 1 >= Cell.N_CELL_FOR_TYPE[cell.cell_type]:
-			return
+		coords.erase(child);
+	cells.remove_at(cells.find(cell));

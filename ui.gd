@@ -8,7 +8,6 @@ extends CanvasLayer
 var goal_step: int = 0;
 
 const goals: Array[String] = [
-	"Dupliquez une cellule !",
 	"Obtenir 12 cellules",
 	"Former une Super cellule",
 	"Obtenir 50 cellules",
@@ -23,6 +22,16 @@ const goals: Array[String] = [
 	"Obtenir 100'000 cellules",
 ]
 
+const goals_max: Array[int] = [
+	1, 50, 5, 1, 150, 5, 500, 1000, 2000, 5000, 100_000,
+]
+
+
+func on_goal_reached():
+	progress_bar.max_value = goals_max[goal_step]
+	goal_step += 1
+	$Win.play()
+
 
 func _ready() -> void:
 	var reset_button: TextureButton = $PanelContainer/MarginContainer/TopBar/C3/Reset
@@ -34,90 +43,27 @@ func _process(_delta: float) -> void:
 	var nb_super_cells = 0
 	var nb_factory_cells = 0
 	for cell in game.cells:
-		if cell.cell_type == Cell.CellType.TYPE1:
-			tot += 1
-		elif cell.cell_type == Cell.CellType.TYPE2:
-			tot += 15
-			nb_super_cells += 1
-		elif cell.cell_type == Cell.CellType.TYPE3:
-			tot += 100
-			nb_factory_cells += 1
+		match cell.kind:
+			0:
+				tot += 1
+			1:
+				tot += 15
+				nb_super_cells += 1
+			2:
+				tot += 100
+				nb_factory_cells += 1
 	total_cells.text = str(tot)
 	
-	if goal_step == 0:
-		progress_bar.max_value = 1
-		progress_bar.value = 0
-		if tot >= 2:
-			progress_bar.value = 1
-			goal_step += 1
-			$Win.play()
-	elif goal_step == 1:
-		progress_bar.max_value = 12
-		progress_bar.value = tot
-		if tot >= 12:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 2:
-		progress_bar.value = tot
-		if nb_super_cells >= 1:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 3:
-		progress_bar.max_value = 50
-		progress_bar.value = tot
-		if tot >= 50:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 4:
-		progress_bar.max_value = 5
-		progress_bar.value = nb_super_cells
-		if nb_super_cells >= 5:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 5:
-		if nb_factory_cells >= 1:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 6:
-		progress_bar.max_value = 150
-		progress_bar.value = tot
-		if tot >= 150:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 7:
-		progress_bar.max_value = 5
-		progress_bar.value = nb_factory_cells
-		if nb_factory_cells >= 5:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 8:
-		progress_bar.max_value = 500
-		progress_bar.value = tot
-		if tot >= 500:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 9:
-		progress_bar.max_value = 1000
-		progress_bar.value = tot
-		if tot >= 1000:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 10:
-		progress_bar.max_value = 2000
-		progress_bar.value = tot
-		if tot >= 2000:
-			$Win.play()
-			goal_step += 1
-	elif goal_step == 11:
-		progress_bar.max_value = 5000
-		progress_bar.value = tot
-		if tot >= 5000:
-			$Win.play()
-			goal_step += 1
-	else:
-		progress_bar.max_value = 100_000
-		#$Win.play()
-		progress_bar.value = tot
+	match goal_step:
+		0, 2, 5, 7, 8, 9, 10, 11:
+			progress_bar.value = tot
+		1, 3: 
+			progress_bar.value = nb_super_cells
+		4, 6: 
+			progress_bar.value = nb_factory_cells
+	
+	if progress_bar.value == progress_bar.max_value:
+		on_goal_reached();
 	
 	current_goal.text = goals[goal_step]
 

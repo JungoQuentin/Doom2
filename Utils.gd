@@ -57,9 +57,9 @@ static func moved_in_dir(start: Vector2i, dir: Direction) -> Vector2i:
 static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
 	var result: Dictionary[Vector2i, Cell] = {}
 	for cell in base:
-		if cell.cell_type == Cell.CellType.TYPE1:
+		if cell.kind == 0:
 			result[cell.center] = cell
-		elif cell.cell_type == Cell.CellType.TYPE2:
+		elif cell.kind == 2:
 			result[cell.center] = cell
 			for child in cell.childs:
 				result[child] = cell
@@ -68,33 +68,25 @@ static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
 	return result
 
 
-static func are_there_bigger_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell], cell_type: Cell.CellType, self_cell) -> bool:
-	match cell_type:
-		Cell.CellType.TYPE1:
-			for i in range(6):
-				if coords.has(moved_in_dir(pos, i)):
-					var check_cell = coords[moved_in_dir(pos, i)]
-					if check_cell.cell_type > cell_type and check_cell != self_cell:
-						return true
-			return false
-		Cell.CellType.TYPE2:
-			for i in range(6): # first circle
-				if coords.has(moved_in_dir(pos, i)):
-					var check_cell = coords[moved_in_dir(pos, i)]
-					if check_cell.cell_type > cell_type and check_cell != self_cell:
-						return true
-				for j in range(3): # second circle 
-					if coords.has(moved_in_dir(moved_in_dir(pos, i), (i + j) % 6)):
-						var check_cell = coords[moved_in_dir(moved_in_dir(pos, i), (i + j) % 6)]
-						if check_cell.cell_type > cell_type and check_cell != self_cell:
-							return true
-			return false
+## Return a tile's position and its surroundings based on the kind of cell
+static func get_surroundings(position: Vector2i, kind: int) -> Array[Vector2i]:
+	var childs: Array[Vector2i] = [position]
+	if kind >= 1:
+		for dir in range(6): # first circle
+			childs.append(moved_in_dir(position, dir))
+	return childs
+
+
+## Checks if any tile around a position is occipied
+static func are_there_cells_around(position: Vector2i, coords: Dictionary[Vector2i, Cell], kind: int) -> bool:
+	for gost_child in get_surroundings(position, kind):
+		if coords.has(gost_child):
+			return true
 	return false
 
-static func are_there_type2_cells_around(pos: Vector2i, coords: Dictionary[Vector2i, Cell], self_cell: Cell) -> bool:
-	for i in range(6):
-		if coords.has(moved_in_dir(pos, i)):
-			var check_cell = coords[moved_in_dir(pos, i)]
-			if check_cell.cell_type == Cell.CellType.TYPE2 and check_cell != self_cell:
-				return true
+## Checks if any tile around a position is occipied by a higher kind of cell
+static func are_there_bigger_or_same_cells_around(position: Vector2i, coords: Dictionary[Vector2i, Cell], kind: int, self_cell) -> bool:
+	for gost_child in get_surroundings(position, kind):
+		if coords.has(gost_child) and coords[gost_child].kind >= kind and coords[gost_child] != self_cell:
+			return true
 	return false

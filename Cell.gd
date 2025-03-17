@@ -1,51 +1,66 @@
 class_name Cell
 
-enum CellType { TYPE1, TYPE2, TYPE3, TYPE4 }
+const size: Array[float] = [
+	1.35,
+	3.8,
+	6,
+	8,
+]
 
-## Nombre de cellule qu'il faut pour passer au type suivant
-const N_CELL_FOR_TYPE: Dictionary[int, int] = {
-	CellType.TYPE1: 13,
-	CellType.TYPE2: 6,
-	CellType.TYPE3: 20,
-	CellType.TYPE4: 3,
-}
+const color: Array[Color] = [
+	Color.LIGHT_PINK,
+	Color(1, 0.67, 0.62),
+	Color(0.92, 0.67, 0.81),
+	Color(0.5, 0.35, 0.88),
+]
+
+## Nombre de cellule qu'il faut fusionner pour passer au type suivant
+const NB_CELL_FOR_MERGE: Array[int] = [
+	12,
+	5,
+	20,
+];
+
+## Nombre de cellules à aparaitre au clique
+const NB_SPAWN_CELL: Array[int] = [
+	1,
+	3,
+	5
+];
 
 var center: Vector2i;
-var cell_type: CellType;
+var kind: int;  # Anciennement "cell_type"
 var childs: Array[Vector2i];
 var can_merge: bool;
 var rnd: Array[float];
 
-func _init(_center: Vector2i, _cell_type: CellType):
-	self.center = _center;
-	self.cell_type = _cell_type;
-	self.childs = [];
+func _init(center: Vector2i, kind: int):
+	self.center = center;
+	self.kind = kind;
 	self.rnd = [];
 	for _i in range(4):
 		self.rnd.append(randf());
-	if cell_type == CellType.TYPE2:
-		for i in range(6):
-			self.childs.append(Utils.moved_in_dir(center, i));
-	if cell_type == CellType.TYPE3:
-		for i in range(6):  # first circle
-			var first_circle = Utils.moved_in_dir(center, i);
-			self.childs.append(first_circle);
-		for i in range(6):  # second circle
-			var first_circle = Utils.moved_in_dir(center, i);
-			for j in range(3):
-				var new_child = Utils.moved_in_dir(first_circle, (i + j) % 6)
-				if not (new_child in self.childs) and new_child != center:
-					self.childs.append(new_child)
+	
+	self.childs = [self.center];
+	for i in range(kind):
+		print(i)
+	
+	match kind:
+		1:
+			for i in range(6):
+				self.childs.append(Utils.moved_in_dir(center, i));
+		2:
+			for i in range(6):  # first circle
+				var first_circle = Utils.moved_in_dir(center, i);
+				self.childs.append(first_circle);
+			for i in range(6):  # second circle
+				var first_circle = Utils.moved_in_dir(center, i);
+				for j in range(3):
+					var new_child = Utils.moved_in_dir(first_circle, (i + j) % 6)
+					if not (new_child in self.childs) and new_child != center:
+						self.childs.append(new_child)
+		_: pass
 	self.can_merge = false;
 
 func _to_string() -> String:
-	var type = "unknown"
-	match self.cell_type:
-		CellType.TYPE1:
-			type = "T1"
-		CellType.TYPE2:
-			type = "T2"
-		CellType.TYPE3:
-			type = "T3"
-	
-	return type + " " + str(self.center)
+	return "Cell(T" + str(self.kind) + " " + str(self.center) + ")"
