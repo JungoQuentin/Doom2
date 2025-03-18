@@ -69,7 +69,7 @@ func _input(event: InputEvent) -> void:
 					spawn_many(Cell.NB_SPAWN_CELL[cell.kind])
 		else:
 			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
-		Ui.update_score()
+		
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(get_global_mouse_position())
 		if new_mouse_tile != mouse_tile:
@@ -97,7 +97,8 @@ func _draw() -> void:
 		var color = Cell.color[cell.kind]
 		var fill_color = color
 		if cell in auto_mergeable_cells:
-			fill_color = color.lightened(0.5)
+			color = color.lightened(0.4)
+			fill_color = color
 		if cell in mergeable_cells or mouse_tile in cell.childs:
 			fill_color = color.darkened(0.1)
 		
@@ -128,7 +129,6 @@ func factory():
 			await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
 			spawn_cell(cell.center, 0)
 			$PopT1.play()
-			Ui.update_score()
 
 
 func select_auto_merge():
@@ -152,7 +152,6 @@ func auto_merge():
 		return
 	merge(auto_mergeable_cells, 0)
 	auto_mergeable_cells.clear()
-	Ui.update_score()
 
 
 func merge(cells_to_merge: Array[Cell], kind: int):
@@ -242,7 +241,6 @@ func move_cell(cell: Cell, dir: Utils.Direction):
 	cell.center = Utils.moved_in_dir(cell.center, dir)
 	for victim in victims:
 		spawn_cell(cell.center, victim, (dir + 3) % 6)
-	Ui.update_score()
 
 ## Delete the cell and corresponding coords
 func delete_cell(cell: Cell):

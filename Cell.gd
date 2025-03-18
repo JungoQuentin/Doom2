@@ -18,7 +18,7 @@ const color: Array[Color] = [
 const NB_CELL_FOR_MERGE: Array[int] = [
 	12,
 	6,
-	15,
+	12,
 	8,
 ]
 

@@ -86,7 +86,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_fonts/font = ExtResource("1_nltto")
 theme_override_font_sizes/font_size = 43
-text = "Dupliquez une cellule !"
+text = "Obtenir 12 cellules"
 horizontal_alignment = 1
 autowrap_mode = 2
 
