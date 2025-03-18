@@ -9,15 +9,6 @@ enum Direction {
 	BottomRight,
 }
 
-const ALL_DIRECTION: Array[Direction] = [
-	Direction.TopLeft,
-	Direction.TopRight,
-	Direction.Left,
-	Direction.Right,
-	Direction.BottomLeft,
-	Direction.BottomRight,
-]
-
 ## angle as degree
 static func angle_to_direction(angle: float) -> Direction:
 	angle = float(roundi(angle + 360) % 360) + 30
@@ -51,31 +42,51 @@ static func moved_in_dir(start: Vector2i, dir: Direction) -> Vector2i:
 			return start + Vector2i(start.y % 2 - 1, 1)
 		Direction.BottomRight: 
 			return start + Vector2i(start.y % 2, 1)
-	return Vector2i(0, 0) # TODO crash
+	printerr("moved_in_dir() had a bad 'dir' argument: ()", dir, "Should be between 1 and 6")
+	return Vector2i.ZERO
 
 
-static func cells_list_to_dict(base: Array[Cell]) -> Dictionary[Vector2i, Cell]:
-	var result: Dictionary[Vector2i, Cell] = {}
-	for cell in base:
-		if cell.kind == 0:
-			result[cell.center] = cell
-		elif cell.kind == 2:
-			result[cell.center] = cell
-			for child in cell.childs:
-				result[child] = cell
-		else:
-			pass # TODO logique de detetion de tous les tiles que rempli une grosse cell
-	return result
+static func cells_list_to_dict(cells: Array[Cell]) -> Dictionary[Vector2i, Cell]:
+	var coords: Dictionary[Vector2i, Cell] = {}
+	for cell in cells:
+		for child in cell.childs:
+			coords[child] = cell
+	return coords
 
-
-## Return a tile's position and its surroundings based on the kind of cell
+## Return a tile's position and its surroundings (gost childs) based on the kind of cell
 static func get_surroundings(position: Vector2i, kind: int) -> Array[Vector2i]:
 	var childs: Array[Vector2i] = [position]
-	if kind >= 1:
-		for dir in range(6): # first circle
-			childs.append(moved_in_dir(position, dir))
+	match kind:
+		0: pass
+		1:
+			for dir in range(6): # first circle
+				childs.append(moved_in_dir(position, dir))
+		_: # TODO make more efficient
+			for _n in range(kind):
+				var smaller_childs = childs.duplicate()
+				for child in smaller_childs:
+					for dir in range(6): # second circle
+						if moved_in_dir(child, dir) not in childs:
+							childs.append(moved_in_dir(child, dir))
 	return childs
 
+## Return a tile's neibourgs positions (touching surroundings) based on the kind of cell
+static func get_neibourgs(position: Vector2i, kind: int) -> Array[Vector2i]:
+	var neibourgs: Array[Vector2i] = []
+	match kind:
+		0:
+			for dir in range(6): # first circle
+				neibourgs.append(moved_in_dir(position, dir))
+		_: # TODO make more efficient
+			var childs = get_surroundings(position, kind)
+			for child in childs:
+				for dir in range(6):
+					neibourgs.append(moved_in_dir(child, dir))
+			for child in childs:
+				if child in neibourgs:
+					while neibourgs.has(child):
+						neibourgs.erase(child)
+	return neibourgs
 
 ## Checks if any tile around a position is occipied
 static func are_there_cells_around(position: Vector2i, coords: Dictionary[Vector2i, Cell], kind: int) -> bool:

@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://dhj1rjgqrc2gj"]
+
+[ext_resource type="PackedScene" uid="uid://bvot1qpsbbms6" path="res://node_2d.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://3xsovfg5vqyt" path="res://ui.tscn" id="2_0xm2m"]
+[ext_resource type="AudioStream" uid="uid://bo05mpttemoq2" path="res://assets/sfx/relaxing-cinematic-pads-303218.mp3" id="3_h2yge"]
+
+[node name="Main" type="Node2D"]
+
+[node name="Game" parent="." instance=ExtResource("1_ig7tw")]
+
+[node name="UI" parent="." instance=ExtResource("2_0xm2m")]
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_h2yge")
+autoplay = true
+bus = &"Music"
