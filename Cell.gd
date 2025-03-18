@@ -4,7 +4,7 @@ const size: Array[float] = [
 	1.35,
 	3.8,
 	6,
-	8,
+	8.2,
 ]
 
 const color: Array[Color] = [
@@ -17,15 +17,17 @@ const color: Array[Color] = [
 ## Nombre de cellule qu'il faut fusionner pour passer au type suivant
 const NB_CELL_FOR_MERGE: Array[int] = [
 	12,
+	6,
+	15,
 	8,
-	20,
 ]
 
 ## Nombre de cellules à aparaitre au clique
 const NB_SPAWN_CELL: Array[int] = [
 	1,
 	3,
-	5
+	5,
+	5,
 ]
 
 var center: Vector2i

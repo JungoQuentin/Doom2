@@ -1,11 +1,11 @@
 class_name Merge
 
 ## Returns a list of mergeable cells around the mouse tile
-static func set_can_merge(coords, mouse_tile) -> Array[Cell]:
-	if not coords.has(mouse_tile):
+static func get_mergeable_cells(coords, start_pos) -> Array[Cell]:
+	if not coords.has(start_pos):
 		return []
 	
-	var first_cell: Cell = coords[mouse_tile]
+	var first_cell: Cell = coords[start_pos]
 	var kind = first_cell.kind
 	
 	var mergeable_cells: Array[Cell] = [first_cell]

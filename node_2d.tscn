@@ -21,3 +21,18 @@ bus = &"CellSpawn"
 [node name="PopT3" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("4_0hol4")
 bus = &"Cell3Spawn"
+
+[node name="GravitateTimer" type="Timer" parent="."]
+wait_time = 0.05
+autostart = true
+
+[node name="FactoriesTimer" type="Timer" parent="."]
+autostart = true
+
+[node name="AutoMergeTimer" type="Timer" parent="."]
+wait_time = 0.5
+autostart = true
+
+[node name="AutoMergeHighlightTimer" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true

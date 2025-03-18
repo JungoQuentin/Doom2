@@ -16,15 +16,27 @@ var cells: Array[Cell] = [Cell.new(CENTER, 0)]
 var mouse_tile: Vector2i
 ## List of mergeable cells
 var mergeable_cells: Array[Cell] = []
+## Step 1 means type0 cells will auto-merge
+var auto_merge_step: int = 0
 
 var b: float = 0.0
+var auto_mergeable_cells: Array[Cell] = []
+
 @onready var Ui = $"../UI"
+@onready var GravitateTimer: Timer = $GravitateTimer
+@onready var FactoriesTimer: Timer = $FactoriesTimer
+@onready var AutoMergeTimer: Timer = $AutoMergeTimer
+@onready var AutoMergeHighlightTimer: Timer = $AutoMergeHighlightTimer
+
 
 func _ready():
 	$Camera2D.position = tile_to_pos(CENTER)
 	coords = Utils.cells_list_to_dict(cells)
-	start_auto_move_to_center()
-	start_factories()
+	
+	GravitateTimer.timeout.connect(func(): cells.map(func(cell): try_to_move_to_center(cell)))
+	FactoriesTimer.timeout.connect(factory)
+	AutoMergeTimer.timeout.connect(select_auto_merge)
+	AutoMergeHighlightTimer.timeout.connect(auto_merge)
 
 
 func _process(delta: float) -> void:
@@ -34,12 +46,13 @@ func _process(delta: float) -> void:
 	if cells.is_empty(): return
 	var cell_centers = cells.map(func(cell): return cell.center)
 	# Move cam to center of mass
-	var tot = cell_centers.reduce(func sum(accum, number): return accum + number, Vector2i.ZERO)
-	$Camera2D.position = $Camera2D.position * (1 - cam_smoothing) + tile_to_pos(tot / len(cells)) * cam_smoothing
+	#TODO var tot = cell_centers.reduce(func sum(accum, number): return accum + number, Vector2i.ZERO)
+	#TODO $Camera2D.position = $Camera2D.position * (1 - cam_smoothing) + tile_to_pos(tot / len(cells)) * cam_smoothing
 	# Zoom cam to see all
 	var cells_y = cell_centers.map(func(pos): return pos.y)
 	var zoom = max(1, (cells_y.max() - cells_y.min()) * h / 600)
-	$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing
+	if 1 / zoom < $Camera2D.zoom.x:
+		$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing
 
 
 func _input(event: InputEvent) -> void:
@@ -49,17 +62,19 @@ func _input(event: InputEvent) -> void:
 			if coords.has(mouse_tile):
 				var cell = coords[mouse_tile]
 				if cell in mergeable_cells:
-					merge(cell.kind)
+					if cell.kind == 2 and auto_merge_step == 0:
+						auto_merge_step = 1;
+					merge(mergeable_cells, cell.kind)
 				else:
 					spawn_many(Cell.NB_SPAWN_CELL[cell.kind])
 		else:
-			mergeable_cells = Merge.set_can_merge(coords, mouse_tile)
+			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
 		Ui.update_score()
 	if event is InputEventMouseMotion:
 		var new_mouse_tile = pos_to_tile(get_global_mouse_position())
 		if new_mouse_tile != mouse_tile:
 			mouse_tile = new_mouse_tile
-			mergeable_cells = Merge.set_can_merge(coords, mouse_tile)
+			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
 
 
 func spawn_many(q: int) -> void:
@@ -81,6 +96,8 @@ func _draw() -> void:
 		var size = Cell.size[cell.kind]
 		var color = Cell.color[cell.kind]
 		var fill_color = color
+		if cell in auto_mergeable_cells:
+			fill_color = color.lightened(0.5)
 		if cell in mergeable_cells or mouse_tile in cell.childs:
 			fill_color = color.darkened(0.1)
 		
@@ -90,7 +107,7 @@ func _draw() -> void:
 		draw_circle(pos + offset * size, h/2 * size, fill_color)
 		draw_circle(pos + offset * size, h/2 * size, color.darkened(0.1), false, 3)
 		draw_circle(pos + offset_center * size, h/8 * size, color.darkened(0.15))
-	
+	"""
 	for coord in coords: # DEBUG
 		var kind = coords[coord].kind
 		var col
@@ -101,36 +118,52 @@ func _draw() -> void:
 		else:
 			col = Color.DODGER_BLUE
 		draw_circle(tile_to_pos(coord), h/8, col, true)
-	
+	"""
 	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
-
-
-func start_factories():
-	var timer = Timer.new()
-	add_child(timer)
-	timer.wait_time = 0.8 # une cellule type1 toutes les 2 secondes
-	timer.timeout.connect(factory)
-	timer.autostart = true
-	timer.start()
 
 
 func factory():
 	for cell in cells.duplicate():
-		if cell.kind == 3:
+		if cell.kind == 2:
 			await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
 			spawn_cell(cell.center, 0)
 			$PopT1.play()
+			Ui.update_score()
 
 
-func merge(kind: int):
+func select_auto_merge():
+	if auto_merge_step < 1:
+		return
+	var filtered_cells: Array[Cell] = cells.filter(func(cell): return cell.kind == 0)
+	if filtered_cells.is_empty():
+		return
+	auto_mergeable_cells.clear()
+	for _i in range(5):
+		if auto_mergeable_cells.is_empty():
+			var start_cell = filtered_cells[randi() % filtered_cells.size()]
+			auto_mergeable_cells = Merge.get_mergeable_cells(coords, start_cell.center)
+	if auto_mergeable_cells.is_empty():
+		return
+	AutoMergeHighlightTimer.start()
+
+
+func auto_merge():
+	if auto_mergeable_cells.is_empty():
+		return
+	merge(auto_mergeable_cells, 0)
+	auto_mergeable_cells.clear()
+	Ui.update_score()
+
+
+func merge(cells_to_merge: Array[Cell], kind: int):
 	match kind:
 		0, 1, 2, 3:
 			$PopT2.play()
 	
-	for cell in mergeable_cells:
+	for cell in cells_to_merge:
 		delete_cell(cell)
 	
-	for cell in mergeable_cells:
+	for cell in cells_to_merge:
 		if not Utils.are_there_bigger_or_same_cells_around(cell.center, coords, cell.kind + 1, cell):
 			var new_cell = Cell.new(cell.center, cell.kind + 1)
 			for child in new_cell.childs:
@@ -148,18 +181,19 @@ func merge(kind: int):
 				place_to_insert = randi() % (len(cells) - 1) + 1
 			cells.insert(place_to_insert, new_cell)
 			return
-	
 	print("FAILED Merge")
 
 
-func spawn_cell(source_coords: Vector2i, kind: int):
-	var spawn_dir = randi() % 6 # Choose 1 of 6 random directions (spawn_dir)
+func spawn_cell(source_coords: Vector2i, kind: int, _dir: int = -1):
+	var spawn_dir = _dir
+	if _dir == -1:
+		spawn_dir = randi() % 6 # Choose 1 of 6 random directions (spawn_dir)
 	var current_center = source_coords
 	while true:
 		var dir = randi_range(5, 7)
 		var pos = Utils.moved_in_dir(current_center, (spawn_dir + dir) % 6)
 		if not Utils.are_there_cells_around(pos, coords, kind):
-			var new_cell = Cell.new(pos, 0)
+			var new_cell = Cell.new(pos, kind)
 			for child in new_cell.childs:
 				coords[child] = new_cell
 			var place_to_insert = 1
@@ -177,20 +211,10 @@ func tile_to_pos(tile_coords: Vector2i) -> Vector2:
 	var odd = tile_coords.y % 2
 	return h * Vector2(hex_ratio * tile_coords.x + odd * 0.5, tile_coords.y)
 
-
-## Lance la logique de deplacement automatique vers le centre
-## Un timer qui run toutes les x secondes
-func start_auto_move_to_center():
-	var timer = Timer.new()
-	add_child(timer)
-	timer.wait_time = 0.05
-	timer.timeout.connect(func(): cells.map(func(cell): try_to_move_to_center(cell)))
-	timer.autostart = true
-	timer.start()
-
 ## Bouge une cellule vers le centre si possible
 func try_to_move_to_center(cell: Cell):
-	if cell.center == CENTER or len(cells) <= 7:
+	var proba = 0.3 + 0.7 * (1.0 - exp(-cell.kind))
+	if cell.center == CENTER or len(cells) <= 6 or randf() > proba:
 		return
 	var angle = rad_to_deg(Vector2(CENTER - cell.center).angle())
 	angle += (randf() - 0.5) * 90
@@ -217,7 +241,8 @@ func move_cell(cell: Cell, dir: Utils.Direction):
 		coords[moved_child_pos] = cell
 	cell.center = Utils.moved_in_dir(cell.center, dir)
 	for victim in victims:
-		spawn_cell(cell.center, victim) # TODO ca marche vraiment ?
+		spawn_cell(cell.center, victim, (dir + 3) % 6)
+	Ui.update_score()
 
 ## Delete the cell and corresponding coords
 func delete_cell(cell: Cell):
