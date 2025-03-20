@@ -21,6 +21,7 @@ var auto_merge_step: int = 0
 
 var b: float = 0.0
 var auto_mergeable_cells: Array[Cell] = []
+var multi_mesh_instances: Array[MultiMeshInstance2D] = []
 
 @onready var Ui = $"../UI"
 @onready var GravitateTimer: Timer = $GravitateTimer
@@ -37,6 +38,41 @@ func _ready():
 	FactoriesTimer.timeout.connect(factory)
 	AutoMergeTimer.timeout.connect(select_auto_merge)
 	AutoMergeHighlightTimer.timeout.connect(auto_merge)
+	
+	# Multi-Mesh-Instance-2D for drawing
+	for kind in range(Cell.NB_SPAWN_CELL.size()):
+		var multi_mesh_instance = MultiMeshInstance2D.new()
+		var multi_mesh = MultiMesh.new()
+		var mesh = QuadMesh.new()
+		mesh.size = 50 * Vector2.ONE
+		multi_mesh.mesh = mesh
+		if kind == 0:
+			multi_mesh.instance_count = 1
+		multi_mesh_instance.multimesh = multi_mesh
+		# TODO utiliser différentes assets
+		multi_mesh_instance.texture = load("res://assets/img/Cell-Type1.svg")
+		#multi_mesh_instance.multimesh.instance_count = 100
+		multi_mesh_instances.append(multi_mesh_instance)
+		$".".add_child(multi_mesh_instance)
+	
+	for multi_mesh_instance in multi_mesh_instances:
+		for i in cells.size(): # multi_mesh_instance.multimesh.instance_count:
+			var cell = cells[i]
+			var pos = tile_to_pos(cell.center)
+			var size = Cell.size[cell.kind]
+			"""
+			var color = Cell.color[cell.kind]
+			var fill_color = color
+			if cell in auto_mergeable_cells:
+				color = color.lightened(0.4)
+				fill_color = color
+			if cell in mergeable_cells or mouse_tile in cell.childs:
+				fill_color = color.darkened(0.1)
+			"""
+			var angle = PI
+			var transform = Transform2D(angle, Vector2(1, 1), 0.0, pos)
+			multi_mesh_instance.multimesh.set_instance_transform_2d(i, transform)
+		
 
 
 func _process(delta: float) -> void:
@@ -53,6 +89,25 @@ func _process(delta: float) -> void:
 	var zoom = max(1, (cells_y.max() - cells_y.min()) * h / 600)
 	if 1 / zoom < $Camera2D.zoom.x:
 		$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing
+	
+	
+	for multi_mesh_instance in multi_mesh_instances:
+		for i in cells.size(): # multi_mesh_instance.multimesh.instance_count:
+			var cell = cells[i]
+			var pos = tile_to_pos(cell.center)
+			var size = Cell.size[cell.kind]
+			"""
+			var color = Cell.color[cell.kind]
+			var fill_color = color
+			if cell in auto_mergeable_cells:
+				color = color.lightened(0.4)
+				fill_color = color
+			if cell in mergeable_cells or mouse_tile in cell.childs:
+				fill_color = color.darkened(0.1)
+			"""
+			var angle = PI
+			var transform = Transform2D(angle, Vector2(1, 1), 0.0, pos)
+			multi_mesh_instance.multimesh.set_instance_transform_2d(i, transform)
 
 
 func _input(event: InputEvent) -> void:
@@ -84,7 +139,7 @@ func spawn_many(q: int) -> void:
 		$PopT1.play()
 
 
-func _draw() -> void:
+func _draw():
 	"""
 	for i in range(980, 1020):
 		for j in range(980, 1020):
@@ -102,12 +157,12 @@ func _draw() -> void:
 		if cell in mergeable_cells or mouse_tile in cell.childs:
 			fill_color = color.darkened(0.1)
 		
-		var offset = 3 * cell.rnd[0] * Vector2(cos((cell.rnd[1] - 0.5) * b), sin((cell.rnd[1] - 0.5) * b))
-		var offset_center = offset + 4 * cell.rnd[2] * Vector2(-cos((cell.rnd[3] - 0.5) * b / 2), sin((cell.rnd[3] - 0.5) * b / 2))
+		var offset = Vector2.ZERO #3 * cell.rnd[0] * Vector2(cos((cell.rnd[1] - 0.5) * b), sin((cell.rnd[1] - 0.5) * b))
+		var offset_center = Vector2.ZERO #offset + 4 * cell.rnd[2] * Vector2(-cos((cell.rnd[3] - 0.5) * b / 2), sin((cell.rnd[3] - 0.5) * b / 2))
 		
-		draw_circle(pos + offset * size, h/2 * size, fill_color)
-		draw_circle(pos + offset * size, h/2 * size, color.darkened(0.1), false, 3)
-		draw_circle(pos + offset_center * size, h/8 * size, color.darkened(0.15))
+		draw_circle(pos + offset * size, h/2 * size, fill_color, false, 2)
+		#draw_circle(pos + offset * size, h/2 * size, color.darkened(0.1), false, 3)
+		#draw_circle(pos + offset_center * size, h/8 * size, color.darkened(0.15))
 	"""
 	for coord in coords: # DEBUG
 		var kind = coords[coord].kind
@@ -167,18 +222,11 @@ func merge(cells_to_merge: Array[Cell], kind: int):
 			var new_cell = Cell.new(cell.center, cell.kind + 1)
 			for child in new_cell.childs:
 				if coords.has(child) and coords[child].kind == 0:
-					cells.erase(coords[child])
-					coords.erase(child)
+					delete_cell(coords[child])
 			coords[cell.center] = new_cell
 			for cell_child in new_cell.childs:
 				coords[cell_child] = new_cell
-			if cells.is_empty():
-				cells.append(new_cell)
-				return
-			var place_to_insert = 1
-			if len(cells) > 1:
-				place_to_insert = randi() % (len(cells) - 1) + 1
-			cells.insert(place_to_insert, new_cell)
+			add_cell(new_cell)
 			return
 	print("FAILED Merge")
 
@@ -195,10 +243,7 @@ func spawn_cell(source_coords: Vector2i, kind: int, _dir: int = -1):
 			var new_cell = Cell.new(pos, kind)
 			for child in new_cell.childs:
 				coords[child] = new_cell
-			var place_to_insert = 1
-			if len(cells) > 1:
-				place_to_insert = randi() % (len(cells) - 1) + 1
-			cells.insert(place_to_insert, new_cell)
+			add_cell(new_cell)
 			return
 		current_center = Utils.moved_in_dir(current_center, (spawn_dir + dir) % 6)
 
@@ -242,10 +287,18 @@ func move_cell(cell: Cell, dir: Utils.Direction):
 	for victim in victims:
 		spawn_cell(cell.center, victim, (dir + 3) % 6)
 
+
+## Add a new cell
+func add_cell(cell: Cell):
+	multi_mesh_instances[cell.kind].multimesh.instance_count += 1
+	cells.append(cell)
+	
+
 ## Delete the cell and corresponding coords
 func delete_cell(cell: Cell):
 	if not cells.has(cell):
 		return
+	multi_mesh_instances[cell.kind].multimesh.instance_count -= 1
 	for child in cell.childs:
 		coords.erase(child)
 	cells.remove_at(cells.find(cell))

@@ -5,6 +5,7 @@ const size: Array[float] = [
 	3.8,
 	6,
 	8.2,
+	10,
 ]
 
 const color: Array[Color] = [
@@ -18,8 +19,9 @@ const color: Array[Color] = [
 const NB_CELL_FOR_MERGE: Array[int] = [
 	12,
 	6,
-	12,
-	8,
+	10,
+	5,
+	1000,
 ]
 
 ## Nombre de cellules à aparaitre au clique
@@ -28,6 +30,7 @@ const NB_SPAWN_CELL: Array[int] = [
 	3,
 	5,
 	5,
+	10,
 ]
 
 var center: Vector2i

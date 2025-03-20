@@ -27,29 +27,23 @@ const goals_max: Array[int] = [
 ]
 
 
-func _ready() -> void:
+func _ready():
 	var reset_button: TextureButton = $PanelContainer/MarginContainer/TopBar/C3/Reset
 	reset_button.pressed.connect(on_click_reset)
 
 
 func _process(_delta: float):
 	var score = 0
-	var nb_super_cells = 0
-	var nb_factory_cells = 0
-	var nb_special_cells = 0
 	for cell in game.cells:
 		match cell.kind:
 			0:
 				score += 1
 			1:
 				score += 13 #12
-				nb_super_cells += 1
 			2:
 				score += 80 #13*6
-				nb_factory_cells += 1
 			3:
 				score += 1000 #80*12
-				nb_special_cells += 1
 	if score != last_score:
 		last_score = score
 		update_score()
