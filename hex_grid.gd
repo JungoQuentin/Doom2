@@ -10,8 +10,8 @@ const cam_smoothing: float = 0.005
 
 ## Stores the coods (Vec2i) of every filled tile
 var coords: Dictionary[Vector2i, Cell]
-## List of the Cells (order matters for rendering)
-var cells: Array[Cell] = [Cell.new(CENTER, 0)]
+## List of lists of cells by kind 
+var cells: Array = []
 ## Coords of the tile under the mouse cursor
 var mouse_tile: Vector2i
 ## List of mergeable cells
@@ -19,7 +19,7 @@ var mergeable_cells: Array[Cell] = []
 ## Step 1 means type0 cells will auto-merge
 var auto_merge_step: int = 0
 
-var b: float = 0.0
+var t: float = 0.0
 var auto_mergeable_cells: Array[Cell] = []
 var multi_mesh_instances: Array[MultiMeshInstance2D] = []
 
@@ -31,56 +31,64 @@ var multi_mesh_instances: Array[MultiMeshInstance2D] = []
 
 
 func _ready():
-	$Camera2D.position = tile_to_pos(CENTER)
+	for _i in range(Cell.NB_TYPES):
+		cells.append([])
+	cells[0].append(Cell.new(CENTER, 0))
 	coords = Utils.cells_list_to_dict(cells)
 	
-	GravitateTimer.timeout.connect(func(): cells.map(func(cell): try_to_move_to_center(cell)))
+	$Camera2D.position = tile_to_pos(CENTER)
+	
+	GravitateTimer.timeout.connect(try_to_move_to_center)
 	FactoriesTimer.timeout.connect(factory)
 	AutoMergeTimer.timeout.connect(select_auto_merge)
 	AutoMergeHighlightTimer.timeout.connect(auto_merge)
 	
-	# Multi-Mesh-Instance-2D for drawing
-	for kind in range(Cell.NB_SPAWN_CELL.size()):
+	# Create Multi-Mesh-Instance-2D for drawing
+	for kind in range(Cell.NB_TYPES):
 		var multi_mesh_instance = MultiMeshInstance2D.new()
 		var multi_mesh = MultiMesh.new()
 		var mesh = QuadMesh.new()
-		mesh.size = 50 * Vector2.ONE
+		mesh.size = h * Vector2.ONE * Cell.size[kind]
 		multi_mesh.mesh = mesh
-		if kind == 0:
-			multi_mesh.instance_count = 1
+		multi_mesh.instance_count = 1000
 		multi_mesh_instance.multimesh = multi_mesh
 		# TODO utiliser différentes assets
 		multi_mesh_instance.texture = load("res://assets/img/Cell-Type1.svg")
-		#multi_mesh_instance.multimesh.instance_count = 100
+		
 		multi_mesh_instances.append(multi_mesh_instance)
 		$".".add_child(multi_mesh_instance)
 	
-	for multi_mesh_instance in multi_mesh_instances:
-		for i in cells.size(): # multi_mesh_instance.multimesh.instance_count:
-			var cell = cells[i]
-			var pos = tile_to_pos(cell.center)
-			var size = Cell.size[cell.kind]
-			"""
-			var color = Cell.color[cell.kind]
-			var fill_color = color
+	
+	update_multi_mesh_instances()
+
+
+func update_multi_mesh_instances():
+	for kind in range(Cell.NB_TYPES):
+		var nb_instances = cells[kind].size()
+		multi_mesh_instances[kind].multimesh.visible_instance_count = nb_instances
+		for i in nb_instances:
+			var cell = cells[kind][i]
+			
+			var n = 1
 			if cell in auto_mergeable_cells:
-				color = color.lightened(0.4)
-				fill_color = color
+				pass
 			if cell in mergeable_cells or mouse_tile in cell.childs:
-				fill_color = color.darkened(0.1)
-			"""
+				n = 1.5
+			
 			var angle = PI
-			var transform = Transform2D(angle, Vector2(1, 1), 0.0, pos)
-			multi_mesh_instance.multimesh.set_instance_transform_2d(i, transform)
-		
+			var pos = tile_to_pos(cell.center)
+			var transform = Transform2D(angle, Vector2(1, n), 0.0, pos)
+			multi_mesh_instances[kind].multimesh.set_instance_transform_2d(i, transform)
 
 
 func _process(delta: float) -> void:
-	b += delta * 4
-	queue_redraw()
+	t += delta
 	
-	if cells.is_empty(): return
-	var cell_centers = cells.map(func(cell): return cell.center)
+	update_multi_mesh_instances()
+	
+	if cells[0].size() < 2:
+		return
+	var cell_centers = cells[0].map(func(cell): return cell.center)
 	# Move cam to center of mass
 	#TODO var tot = cell_centers.reduce(func sum(accum, number): return accum + number, Vector2i.ZERO)
 	#TODO $Camera2D.position = $Camera2D.position * (1 - cam_smoothing) + tile_to_pos(tot / len(cells)) * cam_smoothing
@@ -90,28 +98,10 @@ func _process(delta: float) -> void:
 	if 1 / zoom < $Camera2D.zoom.x:
 		$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing
 	
-	
-	for multi_mesh_instance in multi_mesh_instances:
-		for i in cells.size(): # multi_mesh_instance.multimesh.instance_count:
-			var cell = cells[i]
-			var pos = tile_to_pos(cell.center)
-			var size = Cell.size[cell.kind]
-			"""
-			var color = Cell.color[cell.kind]
-			var fill_color = color
-			if cell in auto_mergeable_cells:
-				color = color.lightened(0.4)
-				fill_color = color
-			if cell in mergeable_cells or mouse_tile in cell.childs:
-				fill_color = color.darkened(0.1)
-			"""
-			var angle = PI
-			var transform = Transform2D(angle, Vector2(1, 1), 0.0, pos)
-			multi_mesh_instance.multimesh.set_instance_transform_2d(i, transform)
 
 
-func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+func _input(event: InputEvent):
+	if event is InputEventMouseButton and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 		if event.pressed:
 			mouse_tile = pos_to_tile(get_global_mouse_position())
 			if coords.has(mouse_tile):
@@ -132,64 +122,24 @@ func _input(event: InputEvent) -> void:
 			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
 
 
-func spawn_many(q: int) -> void:
+func spawn_many(q: int):
 	for _i in range(q):
 		await get_tree().create_timer(TIME_BETWEEN_MULTIPLE_SPAWN).timeout
 		spawn_cell(mouse_tile, 0)
 		$PopT1.play()
 
 
-func _draw():
-	"""
-	for i in range(980, 1020):
-		for j in range(980, 1020):
-			var pos = tile_to_pos(Vector2i(i, j))
-			draw_circle(pos, h/2, Color.PALE_VIOLET_RED.lightened(0.6), false, 2)
-	"""
-	for cell in cells:
-		var pos = tile_to_pos(cell.center)
-		var size = Cell.size[cell.kind]
-		var color = Cell.color[cell.kind]
-		var fill_color = color
-		if cell in auto_mergeable_cells:
-			color = color.lightened(0.4)
-			fill_color = color
-		if cell in mergeable_cells or mouse_tile in cell.childs:
-			fill_color = color.darkened(0.1)
-		
-		var offset = Vector2.ZERO #3 * cell.rnd[0] * Vector2(cos((cell.rnd[1] - 0.5) * b), sin((cell.rnd[1] - 0.5) * b))
-		var offset_center = Vector2.ZERO #offset + 4 * cell.rnd[2] * Vector2(-cos((cell.rnd[3] - 0.5) * b / 2), sin((cell.rnd[3] - 0.5) * b / 2))
-		
-		draw_circle(pos + offset * size, h/2 * size, fill_color, false, 2)
-		#draw_circle(pos + offset * size, h/2 * size, color.darkened(0.1), false, 3)
-		#draw_circle(pos + offset_center * size, h/8 * size, color.darkened(0.15))
-	"""
-	for coord in coords: # DEBUG
-		var kind = coords[coord].kind
-		var col
-		if kind == 1:
-			col = Color.BEIGE
-		elif kind == 2:
-			col = Color.SADDLE_BROWN
-		else:
-			col = Color.DODGER_BLUE
-		draw_circle(tile_to_pos(coord), h/8, col, true)
-	"""
-	# draw_circle(tile_to_pos(mouse_tile), h/2 * overh, Color.INDIAN_RED, false, 3)
-
-
 func factory():
-	for cell in cells.duplicate():
-		if cell.kind == 2:
-			await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
-			spawn_cell(cell.center, 0)
-			$PopT1.play()
+	for cell in cells.duplicate()[2]:
+		await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
+		spawn_cell(cell.center, 0)
+		$PopT1.play()
 
 
 func select_auto_merge():
 	if auto_merge_step < 1:
 		return
-	var filtered_cells: Array[Cell] = cells.filter(func(cell): return cell.kind == 0)
+	var filtered_cells: Array[Cell] = cells[0]
 	if filtered_cells.is_empty():
 		return
 	auto_mergeable_cells.clear()
@@ -256,17 +206,19 @@ func tile_to_pos(tile_coords: Vector2i) -> Vector2:
 	return h * Vector2(hex_ratio * tile_coords.x + odd * 0.5, tile_coords.y)
 
 ## Bouge une cellule vers le centre si possible
-func try_to_move_to_center(cell: Cell):
-	var proba = 0.3 + 0.7 * (1.0 - exp(-cell.kind))
-	if cell.center == CENTER or len(cells) <= 6 or randf() > proba:
-		return
-	var angle = rad_to_deg(Vector2(CENTER - cell.center).angle())
-	angle += (randf() - 0.5) * 90
-	var direction = Utils.angle_to_direction(angle)
-	var new_position = Utils.moved_in_dir(cell.center, direction)
-	
-	if not Utils.are_there_bigger_or_same_cells_around(new_position, coords, cell.kind, cell):
-		move_cell(cell, direction)
+func try_to_move_to_center():
+	for cells_of_kind in cells:
+		for cell in cells_of_kind:
+			var proba = 0.3 + 0.7 * (1.0 - exp(-cell.kind))
+			if cell.center == CENTER or randf() > proba:
+				return
+			var angle = rad_to_deg(Vector2(CENTER - cell.center).angle())
+			angle += (randf() - 0.5) * 90
+			var direction = Utils.angle_to_direction(angle)
+			var new_position = Utils.moved_in_dir(cell.center, direction)
+			
+			if not Utils.are_there_bigger_or_same_cells_around(new_position, coords, cell.kind, cell):
+				move_cell(cell, direction)
 
 ## Déplace une cellule dans une direction
 func move_cell(cell: Cell, dir: Utils.Direction):
@@ -290,15 +242,13 @@ func move_cell(cell: Cell, dir: Utils.Direction):
 
 ## Add a new cell
 func add_cell(cell: Cell):
-	multi_mesh_instances[cell.kind].multimesh.instance_count += 1
-	cells.append(cell)
+	cells[cell.kind].append(cell)
 	
 
 ## Delete the cell and corresponding coords
 func delete_cell(cell: Cell):
-	if not cells.has(cell):
-		return
-	multi_mesh_instances[cell.kind].multimesh.instance_count -= 1
+	for cells_of_kind in cells:
+		if cells_of_kind.has(cell):
+			cells_of_kind.remove_at(cells_of_kind.find(cell))
 	for child in cell.childs:
 		coords.erase(child)
-	cells.remove_at(cells.find(cell))

@@ -1,7 +1,7 @@
 extends ProgressBar
 
 @onready var timer: Timer = $Timer
-@onready var Ui = $"../../../../.."
+@onready var Ui = $"../../../../../.."
 var old_value: float = 1
 var new_value: float = 1
 

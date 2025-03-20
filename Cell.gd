@@ -1,5 +1,14 @@
 class_name Cell
 
+const NB_TYPES: int = 5
+
+const NAMES: Array[String] = [
+	"Cells",
+	"Super Cells",
+	"Factory Cells",
+	"Special Cells",
+]
+
 const size: Array[float] = [
 	1.35,
 	3.8,

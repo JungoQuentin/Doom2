@@ -46,11 +46,12 @@ static func moved_in_dir(start: Vector2i, dir: Direction) -> Vector2i:
 	return Vector2i.ZERO
 
 
-static func cells_list_to_dict(cells: Array[Cell]) -> Dictionary[Vector2i, Cell]:
+static func cells_list_to_dict(cells: Array) -> Dictionary[Vector2i, Cell]:
 	var coords: Dictionary[Vector2i, Cell] = {}
-	for cell in cells:
-		for child in cell.childs:
-			coords[child] = cell
+	for cells_of_kind in cells:
+		for cell in cells_of_kind:
+			for child in cell.childs:
+				coords[child] = cell
 	return coords
 
 ## Return a tile's position and its surroundings (gost childs) based on the kind of cell

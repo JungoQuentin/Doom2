@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://3xsovfg5vqyt"]
+[gd_scene load_steps=13 format=3 uid="uid://3xsovfg5vqyt"]
 
 [ext_resource type="Script" uid="uid://i02x5ha2jljy" path="res://ui.gd" id="1_ibotj"]
 [ext_resource type="FontFile" uid="uid://c2evp0lb2lg4v" path="res://assets/fonts/CherryBombOne-Regular.ttf" id="1_nltto"]
@@ -10,7 +10,10 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y4yjw"]
 bg_color = Color(1, 1, 1, 0)
-shadow_color = Color(0.898039, 0.556863, 0.929412, 0.211765)
+expand_margin_left = 100.0
+expand_margin_top = 100.0
+expand_margin_right = 100.0
+shadow_color = Color(0.942917, 0.506239, 0.784231, 0.243137)
 shadow_size = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ibotj"]
@@ -27,46 +30,64 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_y4yjw"]
+content_margin_left = 10.0
+content_margin_right = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_waa4j"]
+bg_color = Color(1, 1, 1, 0)
+expand_margin_left = 5.0
+expand_margin_top = 5.0
+expand_margin_right = 5.0
+expand_margin_bottom = 5.0
+shadow_color = Color(0.942917, 0.506239, 0.784231, 0.243137)
+shadow_size = 8
+
 [node name="UI" type="CanvasLayer"]
 script = ExtResource("1_ibotj")
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
-anchors_preset = 10
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
 anchor_right = 1.0
-offset_bottom = 105.0
+anchor_bottom = 1.0
 grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 35
+
+[node name="TopPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_y4yjw")
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 15
-
-[node name="TopBar" type="HBoxContainer" parent="PanelContainer/MarginContainer"]
+[node name="TopBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopPanel"]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 100
 alignment = 1
 
-[node name="C1" type="MarginContainer" parent="PanelContainer/MarginContainer/TopBar"]
+[node name="C1" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopPanel/TopBar"]
 layout_mode = 2
 theme_override_constants/margin_top = -10
 theme_override_constants/margin_right = -50
 
-[node name="TotalCells" type="Label" parent="PanelContainer/MarginContainer/TopBar/C1"]
+[node name="TotalCells" type="Label" parent="MarginContainer/VBoxContainer/TopPanel/TopBar/C1"]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_nltto")
 theme_override_font_sizes/font_size = 54
 text = "1"
 
-[node name="C2" type="VBoxContainer" parent="PanelContainer/MarginContainer/TopBar"]
+[node name="C2" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopPanel/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ProgressBar" type="ProgressBar" parent="PanelContainer/MarginContainer/TopBar/C2"]
+[node name="ProgressBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopPanel/TopBar/C2"]
 custom_minimum_size = Vector2(500, 20)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_ibotj")
@@ -76,11 +97,11 @@ value = 1.0
 show_percentage = false
 script = ExtResource("3_y4yjw")
 
-[node name="Timer" type="Timer" parent="PanelContainer/MarginContainer/TopBar/C2/ProgressBar"]
+[node name="Timer" type="Timer" parent="MarginContainer/VBoxContainer/TopPanel/TopBar/C2/ProgressBar"]
 wait_time = 0.15
 one_shot = true
 
-[node name="CurrentGoal" type="Label" parent="PanelContainer/MarginContainer/TopBar/C2"]
+[node name="CurrentGoal" type="Label" parent="MarginContainer/VBoxContainer/TopPanel/TopBar/C2"]
 custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -90,15 +111,74 @@ text = "Obtenir 12 cellules"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="C3" type="MarginContainer" parent="PanelContainer/MarginContainer/TopBar"]
+[node name="C3" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopPanel/TopBar"]
 layout_mode = 2
 
-[node name="Reset" type="TextureButton" parent="PanelContainer/MarginContainer/TopBar/C3"]
+[node name="Reset" type="TextureButton" parent="MarginContainer/VBoxContainer/TopPanel/TopBar/C3"]
 layout_mode = 2
 tooltip_text = "reset"
 texture_normal = ExtResource("2_ibotj")
 texture_pressed = ExtResource("3_n5ude")
 texture_hover = ExtResource("4_y4yjw")
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_y4yjw")
+
+[node name="PanelLeft" type="PanelContainer" parent="MarginContainer/VBoxContainer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_waa4j")
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer/PanelContainer/PanelLeft"]
+layout_mode = 2
+columns = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/PanelContainer/PanelLeft/GridContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_nltto")
+theme_override_font_sizes/font_size = 20
+text = "Cells :"
+
+[node name="Label2" type="Label" parent="MarginContainer/VBoxContainer/PanelContainer/PanelLeft/GridContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_nltto")
+theme_override_font_sizes/font_size = 20
+text = "1"
+
+[node name="PanelRight" type="PanelContainer" parent="MarginContainer/VBoxContainer/PanelContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = SubResource("StyleBoxFlat_waa4j")
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer/PanelContainer/PanelRight"]
+layout_mode = 2
+columns = 2
+
+[node name="CellsT0 Name" type="Label" parent="MarginContainer/VBoxContainer/PanelContainer/PanelRight/GridContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_nltto")
+theme_override_font_sizes/font_size = 20
+text = "Cells :"
+
+[node name="CellsT0 Nb" type="Label" parent="MarginContainer/VBoxContainer/PanelContainer/PanelRight/GridContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_nltto")
+theme_override_font_sizes/font_size = 20
+text = "2500"
+
+[node name="CellsT1 Name" type="Label" parent="MarginContainer/VBoxContainer/PanelContainer/PanelRight/GridContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_nltto")
+theme_override_font_sizes/font_size = 20
+text = "Super Cells :"
+
+[node name="CellsT1 Nb" type="Label" parent="MarginContainer/VBoxContainer/PanelContainer/PanelRight/GridContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_nltto")
+theme_override_font_sizes/font_size = 20
+text = "100"
 
 [node name="Win" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("6_n5ude")
