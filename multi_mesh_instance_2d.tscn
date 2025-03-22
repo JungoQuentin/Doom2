@@ -1,12 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://djti5eyitmfnw"]
+[gd_scene load_steps=6 format=3 uid="uid://djti5eyitmfnw"]
 
-[ext_resource type="Shader" uid="uid://c6oh181qnvrur" path="res://multi_mesh_instance_2d.gdshader" id="1_1pjpe"]
 [ext_resource type="Texture2D" uid="uid://bitgxr2rkuy7n" path="res://assets/img/Cell-Type1.svg" id="1_6ixho"]
 [ext_resource type="Script" uid="uid://dkqdbkakvui4l" path="res://multi_mesh_instance_2d.gd" id="2_6ixho"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aem3u"]
-render_priority = 0
-shader = ExtResource("1_1pjpe")
 
 [sub_resource type="QuadMesh" id="QuadMesh_6ixho"]
 material = SubResource("ShaderMaterial_aem3u")

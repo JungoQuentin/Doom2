@@ -46,6 +46,7 @@ func _ready():
 	# Create Multi-Mesh-Instance-2D for drawing
 	for kind in range(Cell.NB_TYPES):
 		var multi_mesh_instance = MultiMeshInstance2D.new()
+		multi_mesh_instance.z_index = -1
 		var multi_mesh = MultiMesh.new()
 		var mesh = QuadMesh.new()
 		mesh.size = h * Vector2.ONE * Cell.size[kind]
@@ -57,8 +58,6 @@ func _ready():
 		
 		multi_mesh_instances.append(multi_mesh_instance)
 		$".".add_child(multi_mesh_instance)
-	
-	
 	update_multi_mesh_instances()
 
 
@@ -68,16 +67,8 @@ func update_multi_mesh_instances():
 		multi_mesh_instances[kind].multimesh.visible_instance_count = nb_instances
 		for i in nb_instances:
 			var cell = cells[kind][i]
-			
-			var n = 1
-			if cell in auto_mergeable_cells:
-				pass
-			if cell in mergeable_cells or mouse_tile in cell.childs:
-				n = 1.5
-			
-			var angle = PI
 			var pos = tile_to_pos(cell.center)
-			var transform = Transform2D(angle, Vector2(1, n), 0.0, pos)
+			var transform = Transform2D(PI, Vector2.ONE, 0.0, pos)
 			multi_mesh_instances[kind].multimesh.set_instance_transform_2d(i, transform)
 
 
@@ -85,6 +76,7 @@ func _process(delta: float) -> void:
 	t += delta
 	
 	update_multi_mesh_instances()
+	queue_redraw()
 	
 	if cells[0].size() < 2:
 		return
@@ -97,7 +89,19 @@ func _process(delta: float) -> void:
 	var zoom = max(1, (cells_y.max() - cells_y.min()) * h / 600)
 	if 1 / zoom < $Camera2D.zoom.x:
 		$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing
+
+
+func _draw():
+	if not mergeable_cells.is_empty():
+		for cell in mergeable_cells:
+			draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], Color.LIGHT_PINK.darkened(0.1))
+	elif coords.has(mouse_tile):
+		var cell = coords[mouse_tile]
+		draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], Color.LIGHT_PINK.darkened(0.1))
 	
+	if !auto_mergeable_cells.is_empty():
+		for cell in auto_mergeable_cells:
+			draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], Color.LIGHT_PINK.lightened(0.2))
 
 
 func _input(event: InputEvent):
