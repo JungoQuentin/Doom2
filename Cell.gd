@@ -59,4 +59,4 @@ func _init(_center: Vector2i, _kind: int):
 	self.can_merge = false
 
 func _to_string() -> String:
-	return "CELL[T" + str(self.kind) + " pos:" + str(self.center) + "]"
+	return "Cell[T" + str(self.kind) + " pos:" + str(self.center) + "]"

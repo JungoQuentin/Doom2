@@ -4,8 +4,8 @@ extends Node2D
 const CENTER:= Vector2i(1_000, 1_000)
 const TIME_BETWEEN_MULTIPLE_SPAWN = 0.05
 const hex_ratio: float = 2/sqrt(3)
-const h: float = 50.0 # Cell size
-const cam_smoothing: float = 0.005
+const h: int = 64 # Cell size
+const cam_smoothing: float = 0.002
 
 
 ## Stores the coods (Vec2i) of every filled tile
@@ -38,7 +38,7 @@ func _ready():
 	
 	$Camera2D.position = tile_to_pos(CENTER)
 	
-	GravitateTimer.timeout.connect(try_to_move_to_center)
+	GravitateTimer.timeout.connect(move_cells_to_center)
 	FactoriesTimer.timeout.connect(factory)
 	AutoMergeTimer.timeout.connect(select_auto_merge)
 	AutoMergeHighlightTimer.timeout.connect(auto_merge)
@@ -51,7 +51,7 @@ func _ready():
 		var mesh = QuadMesh.new()
 		mesh.size = h * Vector2.ONE * Cell.size[kind]
 		multi_mesh.mesh = mesh
-		multi_mesh.instance_count = 1000
+		multi_mesh.instance_count = 5000
 		multi_mesh_instance.multimesh = multi_mesh
 		# TODO utiliser différentes assets
 		multi_mesh_instance.texture = load("res://assets/img/Cell-Type1.svg")
@@ -68,27 +68,24 @@ func update_multi_mesh_instances():
 		for i in nb_instances:
 			var cell = cells[kind][i]
 			var pos = tile_to_pos(cell.center)
-			var transform = Transform2D(PI, Vector2.ONE, 0.0, pos)
-			multi_mesh_instances[kind].multimesh.set_instance_transform_2d(i, transform)
+			var mesh_transform = Transform2D(PI, Vector2.ONE, 0.0, pos)
+			multi_mesh_instances[kind].multimesh.set_instance_transform_2d(i, mesh_transform)
 
 
-func _process(delta: float) -> void:
+func _process(delta: float):
 	t += delta
 	
 	update_multi_mesh_instances()
 	queue_redraw()
 	
-	if cells[0].size() < 2:
-		return
-	var cell_centers = cells[0].map(func(cell): return cell.center)
-	# Move cam to center of mass
-	#TODO var tot = cell_centers.reduce(func sum(accum, number): return accum + number, Vector2i.ZERO)
-	#TODO $Camera2D.position = $Camera2D.position * (1 - cam_smoothing) + tile_to_pos(tot / len(cells)) * cam_smoothing
-	# Zoom cam to see all
-	var cells_y = cell_centers.map(func(pos): return pos.y)
-	var zoom = max(1, (cells_y.max() - cells_y.min()) * h / 600)
-	if 1 / zoom < $Camera2D.zoom.x:
-		$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing
+	# Camera zoom
+	var window_size = get_viewport_rect().size
+	var cells_y = coords.keys().map(func(pos): return pos.y)
+	var v_max = max(cells_y.max() - CENTER.y, CENTER.y - cells_y.min()) + 1
+	var cells_x = coords.keys().map(func(pos): return pos.y)
+	var h_max = max(cells_x.max() - CENTER.x, CENTER.x - cells_x.min()) + 1
+	var zoom = max(1, 2 * h * max(v_max / window_size.y, h_max / window_size.x))
+	$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing
 
 
 func _draw():
@@ -143,7 +140,7 @@ func factory():
 func select_auto_merge():
 	if auto_merge_step < 1:
 		return
-	var filtered_cells: Array[Cell] = cells[0]
+	var filtered_cells: Array = cells[0]
 	if filtered_cells.is_empty():
 		return
 	auto_mergeable_cells.clear()
@@ -210,18 +207,16 @@ func tile_to_pos(tile_coords: Vector2i) -> Vector2:
 	return h * Vector2(hex_ratio * tile_coords.x + odd * 0.5, tile_coords.y)
 
 ## Bouge une cellule vers le centre si possible
-func try_to_move_to_center():
-	for cells_of_kind in cells:
-		for cell in cells_of_kind:
-			var proba = 0.3 + 0.7 * (1.0 - exp(-cell.kind))
-			if cell.center == CENTER or randf() > proba:
-				return
-			var angle = rad_to_deg(Vector2(CENTER - cell.center).angle())
-			angle += (randf() - 0.5) * 90
-			var direction = Utils.angle_to_direction(angle)
+func move_cells_to_center():
+	if coords.size() < 6:
+		return
+	for kind in range(Cell.NB_TYPES): # range(Cell.NB_TYPES - 1, -1, -1):
+		for cell in cells[kind]:
+			if cell.center == CENTER:
+				continue
+			var direction = Utils.angle_to_direction(rad_to_deg(Vector2(CENTER - cell.center).angle()) + (randf() - 0.5) * 90)
 			var new_position = Utils.moved_in_dir(cell.center, direction)
-			
-			if not Utils.are_there_bigger_or_same_cells_around(new_position, coords, cell.kind, cell):
+			if not Utils.are_there_bigger_or_same_cells_around(new_position, coords, kind, cell):
 				move_cell(cell, direction)
 
 ## Déplace une cellule dans une direction
@@ -251,8 +246,8 @@ func add_cell(cell: Cell):
 
 ## Delete the cell and corresponding coords
 func delete_cell(cell: Cell):
-	for cells_of_kind in cells:
-		if cells_of_kind.has(cell):
-			cells_of_kind.remove_at(cells_of_kind.find(cell))
+	var cells_of_kind = cells[cell.kind]
+	if cells_of_kind.has(cell):
+		cells_of_kind.remove_at(cells_of_kind.find(cell))
 	for child in cell.childs:
 		coords.erase(child)
