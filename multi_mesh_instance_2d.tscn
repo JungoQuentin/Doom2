@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://djti5eyitmfnw"]
 
-[ext_resource type="Texture2D" uid="uid://bitgxr2rkuy7n" path="res://assets/img/Cell-Type1.svg" id="1_6ixho"]
+[ext_resource type="Texture2D" path="res://assets/img/Cell-Type1.svg" id="1_6ixho"]
 [ext_resource type="Script" uid="uid://dkqdbkakvui4l" path="res://multi_mesh_instance_2d.gd" id="2_6ixho"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aem3u"]

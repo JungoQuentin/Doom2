@@ -7,12 +7,13 @@ const NAMES: Array[String] = [
 	"Super Cells",
 	"Factory Cells",
 	"Special Cells",
+	"Super Factory Cells"
 ]
 
 const size: Array[float] = [
 	1.35,
-	3.8,
-	6,
+	3.5,
+	7.2,
 	8.2,
 	10,
 ]
@@ -21,15 +22,16 @@ const color: Array[Color] = [
 	Color.LIGHT_PINK,
 	Color(1, 0.67, 0.62),
 	Color(0.92, 0.67, 0.81),
-	Color(0.5, 0.35, 0.88),
+	Color(0.66, 0.64, 0.92),
+	Color(1, 0.58, 0.72),
 ]
 
 ## Nombre de cellule qu'il faut fusionner pour passer au type suivant
 const NB_CELL_FOR_MERGE: Array[int] = [
 	12,
 	6,
-	10,
-	5,
+	12,
+	2,
 	1000,
 ]
 

@@ -28,12 +28,20 @@ var multi_mesh_instances: Array[MultiMeshInstance2D] = []
 @onready var FactoriesTimer: Timer = $FactoriesTimer
 @onready var AutoMergeTimer: Timer = $AutoMergeTimer
 @onready var AutoMergeHighlightTimer: Timer = $AutoMergeHighlightTimer
+@onready var cell_assets = [
+	load("res://assets/img/Cell-T0.svg"),
+	load("res://assets/img/Cell-T1.svg"),
+	load("res://assets/img/Cell-T2.svg"),
+	load("res://assets/img/Cell-T3.svg"),
+	load("res://assets/img/Cell-T4.svg"),
+]
 
 
 func _ready():
 	for _i in range(Cell.NB_TYPES):
 		cells.append([])
 	cells[0].append(Cell.new(CENTER, 0))
+	# cells[0].append(Cell.new(CENTER + Vector2i(8, 0), 4))
 	coords = Utils.cells_list_to_dict(cells)
 	
 	$Camera2D.position = tile_to_pos(CENTER)
@@ -51,10 +59,10 @@ func _ready():
 		var mesh = QuadMesh.new()
 		mesh.size = h * Vector2.ONE * Cell.size[kind]
 		multi_mesh.mesh = mesh
-		multi_mesh.instance_count = 5000
+		multi_mesh.instance_count = 10_000
 		multi_mesh_instance.multimesh = multi_mesh
 		# TODO utiliser différentes assets
-		multi_mesh_instance.texture = load("res://assets/img/Cell-Type1.svg")
+		multi_mesh_instance.texture = cell_assets[kind]
 		
 		multi_mesh_instances.append(multi_mesh_instance)
 		$".".add_child(multi_mesh_instance)
@@ -89,16 +97,28 @@ func _process(delta: float):
 
 
 func _draw():
+	var hover_color = Color.BLACK
+	hover_color.a = 0.15
 	if not mergeable_cells.is_empty():
 		for cell in mergeable_cells:
-			draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], Color.LIGHT_PINK.darkened(0.1))
+			draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], hover_color)
 	elif coords.has(mouse_tile):
 		var cell = coords[mouse_tile]
-		draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], Color.LIGHT_PINK.darkened(0.1))
+		draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], hover_color)
 	
 	if !auto_mergeable_cells.is_empty():
 		for cell in auto_mergeable_cells:
 			draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], Color.LIGHT_PINK.lightened(0.2))
+	"""
+	for kind in range(Cell.NB_TYPES):
+		var pos = CENTER + Vector2i(-10 + kind, 5)
+		for i in range(kind): pos.x += i * 2 + 1
+		var color = Cell.color[kind]
+		draw_circle(tile_to_pos(pos), h / 2 * Cell.size[kind], color)
+		draw_circle(tile_to_pos(pos) - Vector2(h / 8 * Cell.size[kind], 0), h / 5 * Cell.size[kind], color.darkened(0.1))
+		draw_circle(tile_to_pos(pos), h / 2 * Cell.size[kind], color.darkened(0.1), false, 5 + kind)
+	"""
+
 
 
 func _input(event: InputEvent):
