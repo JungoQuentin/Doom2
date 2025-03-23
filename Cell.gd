@@ -11,11 +11,19 @@ const NAMES: Array[String] = [
 ]
 
 const size: Array[float] = [
-	1.35,
+	1.4,
 	3.5,
-	7.2,
-	8.2,
-	10,
+	8.1,
+	9.5,
+	17.4,
+]
+
+const shape: Array = [
+	[],
+	[0],
+	[2, 1],
+	[3, 2, 1],
+	[6, 4, 3, 2, 1, 1, 0]
 ]
 
 const color: Array[Color] = [
@@ -27,13 +35,15 @@ const color: Array[Color] = [
 ]
 
 ## Nombre de cellule qu'il faut fusionner pour passer au type suivant
-const NB_CELL_FOR_MERGE: Array[int] = [
+const NB_CELL_FOR_MERGE: Array[int] = [1, 1, 1, 1, 2]
+"""
+[
 	12,
 	6,
 	12,
 	2,
 	1000,
-]
+]"""
 
 ## Nombre de cellules à aparaitre au clique
 const NB_SPAWN_CELL: Array[int] = [

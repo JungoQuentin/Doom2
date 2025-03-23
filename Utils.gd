@@ -1,12 +1,12 @@
 class_name Utils
 
-enum Direction { 
+enum Direction {
+	Right,
+	BottomRight,
+	BottomLeft,
+	Left,
 	TopLeft,
 	TopRight,
-	Left,
-	Right,
-	BottomLeft,
-	BottomRight,
 }
 
 ## angle as degree
@@ -54,21 +54,20 @@ static func cells_list_to_dict(cells: Array) -> Dictionary[Vector2i, Cell]:
 				coords[child] = cell
 	return coords
 
+
+
 ## Return a tile's position and its surroundings (gost childs) based on the kind of cell
 static func get_surroundings(position: Vector2i, kind: int) -> Array[Vector2i]:
 	var childs: Array[Vector2i] = [position]
-	match kind:
-		0: pass
-		1:
-			for dir in range(6): # first circle
-				childs.append(moved_in_dir(position, dir))
-		_: # TODO make more efficient
-			for _n in range(kind):
-				var smaller_childs = childs.duplicate()
-				for child in smaller_childs:
-					for dir in range(6): # second circle
-						if moved_in_dir(child, dir) not in childs:
-							childs.append(moved_in_dir(child, dir))
+	for dir in range(6):
+		var mov = position
+		for shape in Cell.shape[kind]:
+			mov = moved_in_dir(mov, dir)
+			childs.append(mov)
+			var mov_r = moved_in_dir(mov, (dir + 1) % 6)
+			for n in range(shape):
+				childs.append(mov_r)
+				mov_r = moved_in_dir(mov_r, (dir + 1) % 6)
 	return childs
 
 ## Return a tile's neibourgs positions (touching surroundings) based on the kind of cell

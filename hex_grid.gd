@@ -109,6 +109,7 @@ func _draw():
 	if !auto_mergeable_cells.is_empty():
 		for cell in auto_mergeable_cells:
 			draw_circle(tile_to_pos(cell.center), h / 2 * Cell.size[cell.kind], Color.LIGHT_PINK.lightened(0.2))
+	
 	"""
 	for kind in range(Cell.NB_TYPES):
 		var pos = CENTER + Vector2i(-10 + kind, 5)

@@ -1,6 +1,5 @@
-[gd_scene load_steps=6 format=3 uid="uid://djti5eyitmfnw"]
+[gd_scene load_steps=5 format=3 uid="uid://djti5eyitmfnw"]
 
-[ext_resource type="Texture2D" path="res://assets/img/Cell-Type1.svg" id="1_6ixho"]
 [ext_resource type="Script" uid="uid://dkqdbkakvui4l" path="res://multi_mesh_instance_2d.gd" id="2_6ixho"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aem3u"]
@@ -16,5 +15,4 @@ buffer = PackedFloat32Array(0, 1.96182e-44, 1.4013e-45, 0, 2.10195e-44, 1.96182e
 
 [node name="MultiMeshInstance2D" type="MultiMeshInstance2D"]
 multimesh = SubResource("MultiMesh_1pjpe")
-texture = ExtResource("1_6ixho")
 script = ExtResource("2_6ixho")

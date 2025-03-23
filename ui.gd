@@ -52,7 +52,7 @@ func update_score():
 		cells_count.append(cells_of_kind.size())
 	
 	var nb_counted = int(left_grid.get_child_count()) / 2
-	if cells_count[nb_counted] > 0:
+	if nb_counted < Cell.NB_TYPES and cells_count[nb_counted] > 0:
 		var new_label = left_grid.get_child(0).duplicate()
 		new_label.text = Cell.NAMES[nb_counted] + " :"
 		var new_label2 = left_grid.get_child(1).duplicate()
