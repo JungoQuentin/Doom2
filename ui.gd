@@ -63,7 +63,11 @@ func update_score():
 	for i in nb_counted:
 		left_grid.get_child(2 * i + 1).text = str(cells_count[i])
 	
-	var score = cells_count[0] + cells_count[1] * 13 + cells_count[2] * 80 + cells_count[3] * 1000
+	var score = 0
+	var value = 1
+	for i in range(Cell.NB_TYPES):
+		score += cells_count[i] * value
+		value *= Cell.NB_CELL_FOR_MERGE[i] + 3
 	total_cells.text = str(score)
 	
 	match goal_step:

@@ -1,5 +1,9 @@
 class_name Utils
 
+const hex_ratio: float = 2/sqrt(3)
+const h: int = 64 # Cell size
+
+
 enum Direction {
 	Right,
 	BottomRight,
@@ -46,6 +50,16 @@ static func moved_in_dir(start: Vector2i, dir: Direction) -> Vector2i:
 	return Vector2i.ZERO
 
 
+
+static func pos_to_tile(pos: Vector2) -> Vector2i:
+	var odd = int(pos.y / h - 0.5) % 2
+	return Vector2i(int(pos.x / h / hex_ratio + 0.08 + odd*0.37), int((pos.y / h) + 0.5))
+
+static func tile_to_pos(tile_coords: Vector2i) -> Vector2:
+	var odd = tile_coords.y % 2
+	return h * Vector2(hex_ratio * tile_coords.x + odd * 0.5, tile_coords.y)
+
+
 static func cells_list_to_dict(cells: Array) -> Dictionary[Vector2i, Cell]:
 	var coords: Dictionary[Vector2i, Cell] = {}
 	for cells_of_kind in cells:
@@ -56,48 +70,45 @@ static func cells_list_to_dict(cells: Array) -> Dictionary[Vector2i, Cell]:
 
 
 
-## Return a tile's position and its surroundings (gost childs) based on the kind of cell
-static func get_surroundings(position: Vector2i, kind: int) -> Array[Vector2i]:
+## Return a tile's childs positions based on the kind of cell
+static func get_childs(position: Vector2i, kind: int) -> Array[Vector2i]:
 	var childs: Array[Vector2i] = [position]
 	for dir in range(6):
+		var dir_r = (dir + 1) % 6
 		var mov = position
-		for shape in Cell.shape[kind]:
+		for shadow in Cell.shape[kind]:
 			mov = moved_in_dir(mov, dir)
-			childs.append(mov)
-			var mov_r = moved_in_dir(mov, (dir + 1) % 6)
-			for n in range(shape):
+			var mov_r = mov
+			for _i in range(shadow):
 				childs.append(mov_r)
-				mov_r = moved_in_dir(mov_r, (dir + 1) % 6)
+				mov_r = moved_in_dir(mov_r, dir_r)
 	return childs
 
 ## Return a tile's neibourgs positions (touching surroundings) based on the kind of cell
 static func get_neibourgs(position: Vector2i, kind: int) -> Array[Vector2i]:
 	var neibourgs: Array[Vector2i] = []
-	match kind:
-		0:
-			for dir in range(6): # first circle
-				neibourgs.append(moved_in_dir(position, dir))
-		_: # TODO make more efficient
-			var childs = get_surroundings(position, kind)
-			for child in childs:
-				for dir in range(6):
-					neibourgs.append(moved_in_dir(child, dir))
-			for child in childs:
-				if child in neibourgs:
-					while neibourgs.has(child):
-						neibourgs.erase(child)
+	for dir in range(6):
+		var dir_r = (dir + 1) % 6
+		var mov = position
+		for shadow in Cell.contour[kind]:
+			mov = moved_in_dir(mov, dir)
+			for step in shadow:
+				var mov_r = mov
+				for _i in range(step):
+					mov_r = moved_in_dir(mov_r, dir_r)
+				neibourgs.append(mov_r)
 	return neibourgs
 
 ## Checks if any tile around a position is occipied
 static func are_there_cells_around(position: Vector2i, coords: Dictionary[Vector2i, Cell], kind: int) -> bool:
-	for gost_child in get_surroundings(position, kind):
+	for gost_child in get_childs(position, kind):
 		if coords.has(gost_child):
 			return true
 	return false
 
 ## Checks if any tile around a position is occipied by a higher kind of cell
 static func are_there_bigger_or_same_cells_around(position: Vector2i, coords: Dictionary[Vector2i, Cell], kind: int, self_cell) -> bool:
-	for gost_child in get_surroundings(position, kind):
+	for gost_child in get_childs(position, kind):
 		if coords.has(gost_child) and coords[gost_child].kind >= kind and coords[gost_child] != self_cell:
 			return true
 	return false
