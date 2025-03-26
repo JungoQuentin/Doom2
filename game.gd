@@ -17,11 +17,12 @@ var mergeable_cells: Array[Cell] = []
 ## Step 1 means type0 cells will auto-merge
 var auto_merge_step: int = 0
 
+var is_touch_screen: bool = false
+
 var t: float = 0.0
 var auto_mergeable_cells: Array[Cell] = []
 var multi_mesh_instances: Array[MultiMeshInstance2D] = []
 
-@onready var os = OS.get_name();
 @onready var Ui = $"../UI"
 @onready var GravitateTimer: Timer = $GravitateTimer
 @onready var FactoriesTimer: Timer = $FactoriesTimer
@@ -77,7 +78,6 @@ func update_multi_mesh_instances():
 
 
 func _process(delta: float):
-	Ui.right_grid.get_child(0).text = os
 	t += delta
 	
 	update_multi_mesh_instances()
@@ -110,7 +110,23 @@ func _draw():
 
 func _input(event: InputEvent):
 	if event is InputEventScreenTouch:
-		print(event)
+		is_touch_screen = true
+		if event.pressed:
+			mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
+			if coords.has(mouse_tile):
+				var cell = coords[mouse_tile]
+				if cell in mergeable_cells:
+					if cell.kind == 2 and auto_merge_step == 0:
+						auto_merge_step = 1;
+					merge(mergeable_cells)
+				else:
+					spawn_many(Cell.NB_SPAWN_CELL[cell.kind])
+		else:
+			var new_mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
+			if new_mouse_tile != mouse_tile:
+				mouse_tile = new_mouse_tile
+				mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
+			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
 	if event is InputEventMouseButton and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 		if event.pressed:
 			mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
