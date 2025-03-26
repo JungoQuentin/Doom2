@@ -76,7 +76,7 @@ static func get_childs(position: Vector2i, kind: int) -> Array[Vector2i]:
 	for dir in range(6):
 		var dir_r = (dir + 1) % 6
 		var mov = position
-		for shadow in Cell.shape[kind]:
+		for shadow in Cell.SHAPE[kind]:
 			mov = moved_in_dir(mov, dir)
 			var mov_r = mov
 			for _i in range(shadow):
@@ -90,7 +90,7 @@ static func get_neibourgs(position: Vector2i, kind: int) -> Array[Vector2i]:
 	for dir in range(6):
 		var dir_r = (dir + 1) % 6
 		var mov = position
-		for shadow in Cell.contour[kind]:
+		for shadow in Cell.CONTOUR[kind]:
 			mov = moved_in_dir(mov, dir)
 			for step in shadow:
 				var mov_r = mov

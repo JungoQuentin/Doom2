@@ -21,6 +21,7 @@ var t: float = 0.0
 var auto_mergeable_cells: Array[Cell] = []
 var multi_mesh_instances: Array[MultiMeshInstance2D] = []
 
+@onready var os = OS.get_name();
 @onready var Ui = $"../UI"
 @onready var GravitateTimer: Timer = $GravitateTimer
 @onready var FactoriesTimer: Timer = $FactoriesTimer
@@ -54,9 +55,9 @@ func _ready():
 		multi_mesh_instance.z_index = -1
 		var multi_mesh = MultiMesh.new()
 		var mesh = QuadMesh.new()
-		mesh.size = Utils.h * Vector2.ONE * Cell.Size[kind]
+		mesh.size = Utils.h * Vector2.ONE * Cell.SIZE[kind]
 		multi_mesh.mesh = mesh
-		multi_mesh.instance_count = Cell.InstanceCount[kind]
+		multi_mesh.instance_count = Cell.INSTANCE_COUNT[kind]
 		multi_mesh_instance.multimesh = multi_mesh
 		multi_mesh_instance.texture = cell_assets[kind]
 		multi_mesh_instances.append(multi_mesh_instance)
@@ -76,6 +77,7 @@ func update_multi_mesh_instances():
 
 
 func _process(delta: float):
+	Ui.right_grid.get_child(0).text = os
 	t += delta
 	
 	update_multi_mesh_instances()
@@ -96,17 +98,19 @@ func _draw():
 	hover_color.a = 0.15
 	if not mergeable_cells.is_empty():
 		for cell in mergeable_cells:
-			draw_circle(Utils.tile_to_pos(cell.center), Utils.h / 2 * Cell.Size[cell.kind], hover_color)
+			draw_circle(Utils.tile_to_pos(cell.center), Utils.h / 2 * Cell.SIZE[cell.kind], hover_color)
 	elif coords.has(mouse_tile):
 		var cell = coords[mouse_tile]
-		draw_circle(Utils.tile_to_pos(cell.center), Utils.h / 2 * Cell.Size[cell.kind], hover_color)
+		draw_circle(Utils.tile_to_pos(cell.center), Utils.h / 2 * Cell.SIZE[cell.kind], hover_color)
 	
 	if !auto_mergeable_cells.is_empty():
 		for cell in auto_mergeable_cells:
-			draw_circle(Utils.tile_to_pos(cell.center), Utils.h / 2 * Cell.Size[cell.kind], Color.LIGHT_PINK.lightened(0.2))
+			draw_circle(Utils.tile_to_pos(cell.center), Utils.h / 2 * Cell.SIZE[cell.kind], Color.LIGHT_PINK.lightened(0.2))
 
 
 func _input(event: InputEvent):
+	if event is InputEventScreenTouch:
+		print(event)
 	if event is InputEventMouseButton and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 		if event.pressed:
 			mouse_tile = Utils.pos_to_tile(get_global_mouse_position())

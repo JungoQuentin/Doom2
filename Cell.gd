@@ -2,14 +2,6 @@ class_name Cell
 
 const NB_TYPES: int = 5
 
-const InstanceCount: Array[int] = [
-	10_000,
-	10_000,
-	5000,
-	2000,
-	1000,
-]
-
 const NAMES: Array[String] = [
 	"Cells",
 	"Super Cells",
@@ -18,36 +10,12 @@ const NAMES: Array[String] = [
 	"Super Factory Cells"
 ]
 
-const Size: Array[float] = [
-	1.4,
-	3.5,
-	8.1,
-	9.5,
-	17.4,
-]
-
-const shape: Array = [
-	[],
-	[1],
-	[3, 2],
-	[4, 3, 2],
-	[7, 5, 4, 3, 2, 2, 1]
-]
-
-const contour: Array = [
-	[[0]],
-	[[1], [0]],
-	[[3], [2], [1, 0]],
-	[[4], [3], [2], [1, 0]],
-	[[7], [6, 5], [4], [3], [2], [2], [1], [0]]
-]
-
-const color: Array[Color] = [
-	Color.LIGHT_PINK,
-	Color(1, 0.67, 0.62),
-	Color(0.92, 0.67, 0.81),
-	Color(0.66, 0.64, 0.92),
-	Color(1, 0.58, 0.72),
+const INSTANCE_COUNT: Array[int] = [
+	10_000,
+	10_000,
+	5000,
+	2000,
+	500,
 ]
 
 ## Nombre de cellule qu'il faut fusionner pour passer au type suivant
@@ -66,6 +34,38 @@ const NB_SPAWN_CELL: Array[int] = [
 	5,
 	5,
 	10,
+]
+
+const SHAPE: Array = [
+	[],
+	[1],
+	[3, 2],
+	[4, 3, 2],
+	[7, 5, 4, 3, 2, 2, 1]
+]
+
+const CONTOUR: Array = [
+	[[0]],
+	[[1], [0]],
+	[[3], [2], [1, 0]],
+	[[4], [3], [2], [1, 0]],
+	[[7], [6, 5], [4], [3], [2], [2], [1], [0]]
+]
+
+const SIZE: Array[float] = [
+	1.4,
+	3.5,
+	8.1,
+	9.5,
+	17.4,
+]
+
+const COLOR: Array[Color] = [
+	Color.LIGHT_PINK,
+	Color(1, 0.67, 0.62),
+	Color(0.92, 0.67, 0.81),
+	Color(0.66, 0.64, 0.92),
+	Color(1, 0.58, 0.72),
 ]
 
 var center: Vector2i
