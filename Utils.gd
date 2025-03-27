@@ -112,3 +112,18 @@ static func are_there_bigger_or_same_cells_around(position: Vector2i, coords: Di
 		if coords.has(gost_child) and coords[gost_child].kind >= kind and coords[gost_child] != self_cell:
 			return true
 	return false
+
+static func humanize_number(number: int) -> String:
+	var nb: String = str(number)
+	if len(nb) <= 4:
+		return nb
+	else:
+		var to_return: String
+		var i : int = 0
+		for item in nb.reverse():
+			if i == 3:
+				item += "'"
+				i = 0
+			to_return = item + to_return
+			i += 1
+		return to_return

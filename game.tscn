@@ -27,10 +27,11 @@ wait_time = 0.05
 autostart = true
 
 [node name="FactoriesTimer" type="Timer" parent="."]
+wait_time = 2.0
 autostart = true
 
 [node name="AutoMergeTimer" type="Timer" parent="."]
-wait_time = 0.2
+wait_time = 0.5
 autostart = true
 
 [node name="AutoMergeHighlightTimer" type="Timer" parent="."]

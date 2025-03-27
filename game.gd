@@ -16,8 +16,10 @@ var mouse_tile: Vector2i
 var mergeable_cells: Array[Cell] = []
 ## Step 1 means type0 cells will auto-merge
 var auto_merge_step: int = 0
-
+## Activated when upgrade panel is on
+var freeze_mode: bool = false
 var is_touch_screen: bool = false
+
 
 var auto_mergeable_cells: Array[Cell] = []
 var multi_mesh_instances: Array[MultiMeshInstance2D] = []
@@ -59,7 +61,6 @@ func _ready():
 	
 	# Create Multi-Mesh-Instance-2D for drawing
 	for kind in range(Cell.NB_TYPES):
-		
 		var multi_mesh_instance = MultiMeshInstance2D.new()
 		multi_mesh_instance.z_index = -2
 		var multi_mesh = MultiMesh.new()
@@ -86,6 +87,22 @@ func _ready():
 		multi_mesh_instances_layer2.append(multi_mesh_instance_layer2)
 		$".".add_child(multi_mesh_instance_layer2)
 	update_multi_mesh_instances(0.1)
+	"""
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	spawn_cell(CENTER, 3)
+	"""
 
 
 func update_multi_mesh_instances(delta: float):
@@ -153,6 +170,53 @@ func _process(delta: float):
 	$Camera2D.zoom = $Camera2D.zoom * (1 - cam_smoothing) + Vector2.ONE / zoom * cam_smoothing
 
 
+func _input(event: InputEvent):
+	if freeze_mode:
+		return
+	if event is InputEventScreenTouch:
+		is_touch_screen = true
+		if event.pressed:
+			mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
+			if coords.has(mouse_tile):
+				var cell = coords[mouse_tile]
+				if cell in mergeable_cells:
+					if cell.kind == 3: # Special cell
+						freeze_mode = true
+						Ui.show_upgrade_pannel()
+					else:
+						merge(mergeable_cells)
+				else:
+					spawn_many(Cell.NB_SPAWN_CELL[cell.kind])
+		else:
+			var new_mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
+			if new_mouse_tile != mouse_tile:
+				mouse_tile = new_mouse_tile
+				
+				mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile, Ui.power_step)
+			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile, Ui.power_step)
+	if event is InputEventMouseButton and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+		if event.pressed:
+			mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
+			if coords.has(mouse_tile):
+				var cell = coords[mouse_tile]
+				if cell in mergeable_cells:
+					if cell.kind == 3: # Special cell
+						freeze_mode = true
+						Ui.show_upgrade_pannel()
+					else:
+						merge(mergeable_cells)
+				else:
+					spawn_many(Cell.NB_SPAWN_CELL[cell.kind])
+		else:
+			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile, Ui.power_step)
+		
+	if event is InputEventMouseMotion:
+		var new_mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
+		if new_mouse_tile != mouse_tile:
+			mouse_tile = new_mouse_tile
+			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile, Ui.power_step)
+
+
 func _draw():
 	var hover_color = Color.BLACK
 	hover_color.a = 0.15
@@ -166,46 +230,6 @@ func _draw():
 	if !auto_mergeable_cells.is_empty():
 		for cell in auto_mergeable_cells:
 			draw_circle(Utils.tile_to_pos(cell.center), Utils.h / 2 * Cell.SIZE[cell.kind], Color.LIGHT_PINK.lightened(0.2))
-
-
-func _input(event: InputEvent):
-	if event is InputEventScreenTouch:
-		is_touch_screen = true
-		if event.pressed:
-			mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
-			if coords.has(mouse_tile):
-				var cell = coords[mouse_tile]
-				if cell in mergeable_cells:
-					if cell.kind == 2 and auto_merge_step == 0:
-						auto_merge_step = 1;
-					merge(mergeable_cells)
-				else:
-					spawn_many(Cell.NB_SPAWN_CELL[cell.kind])
-		else:
-			var new_mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
-			if new_mouse_tile != mouse_tile:
-				mouse_tile = new_mouse_tile
-				mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
-			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
-	if event is InputEventMouseButton and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
-		if event.pressed:
-			mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
-			if coords.has(mouse_tile):
-				var cell = coords[mouse_tile]
-				if cell in mergeable_cells:
-					if cell.kind == 2 and auto_merge_step == 0:
-						auto_merge_step = 1;
-					merge(mergeable_cells)
-				else:
-					spawn_many(Cell.NB_SPAWN_CELL[cell.kind])
-		else:
-			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
-		
-	if event is InputEventMouseMotion:
-		var new_mouse_tile = Utils.pos_to_tile(get_global_mouse_position())
-		if new_mouse_tile != mouse_tile:
-			mouse_tile = new_mouse_tile
-			mergeable_cells = Merge.get_mergeable_cells(coords, mouse_tile)
 
 
 func spawn_many(q: int):
@@ -222,8 +246,8 @@ func factory():
 		$PopT1.play()
 	for cell in cells.duplicate()[4]:
 		await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
+		# TODO 120 x Super cells
 		spawn_cell(cell.center, 0)
-		await get_tree().create_timer(randf_range(0.05, 0.15)).timeout
 		spawn_cell(cell.center, 1)
 		$PopT1.play()
 
@@ -238,7 +262,7 @@ func select_auto_merge():
 	for _i in range(15):
 		if auto_mergeable_cells.is_empty():
 			var start_cell = filtered_cells[randi() % filtered_cells.size()]
-			auto_mergeable_cells = Merge.get_mergeable_cells(coords, start_cell.center)
+			auto_mergeable_cells = Merge.get_mergeable_cells(coords, start_cell.center, Ui.power_step)
 	if auto_mergeable_cells.is_empty():
 		return
 	AutoMergeHighlightTimer.start()
@@ -251,14 +275,20 @@ func auto_merge():
 	auto_mergeable_cells.clear()
 
 
-func merge(cells_to_merge: Array[Cell]):
+func merge(cells_to_merge: Array[Cell], just_delete: bool = false):
 	var kind = cells_to_merge[0].kind
+	
 	match kind:
-		0, 1, 2, 3:
+		0, 1, 2:
 			$PopT2.play()
+		3:
+			pass
 	
 	for cell in cells_to_merge:
 		delete_cell(cell)
+	
+	if just_delete:
+		return
 	
 	var centers = cells_to_merge.map(func(cell): return cell.center)
 	var center = centers.reduce(func(a, b): return a + b, Vector2i.ZERO) / cells_to_merge.size()

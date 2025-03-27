@@ -1,7 +1,7 @@
 class_name Merge
 
 ## Returns a list of mergeable cells around the mouse tile
-static func get_mergeable_cells(coords, start_pos) -> Array[Cell]:
+static func get_mergeable_cells(coords, start_pos, power_step) -> Array[Cell]:
 	if not coords.has(start_pos):
 		return []
 	
@@ -9,7 +9,11 @@ static func get_mergeable_cells(coords, start_pos) -> Array[Cell]:
 	var kind = first_cell.kind
 	
 	var mergeable_cells: Array[Cell] = [first_cell]
-	for _i in range(Cell.NB_CELL_FOR_MERGE[kind] - 1):
+	
+	var nb = Cell.NB_CELL_FOR_MERGE[kind]
+	if kind == 3:
+		nb = power_step + 1
+	for _i in range(nb - 1):
 		var new_neibourg = get_new_neibourg(coords, mergeable_cells, kind)
 		if new_neibourg == null:
 			return []
