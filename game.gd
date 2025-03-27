@@ -19,9 +19,9 @@ var auto_merge_step: int = 0
 
 var is_touch_screen: bool = false
 
-var t: float = 0.0
 var auto_mergeable_cells: Array[Cell] = []
 var multi_mesh_instances: Array[MultiMeshInstance2D] = []
+var multi_mesh_instances_layer2: Array[MultiMeshInstance2D] = []
 
 @onready var Ui = $"../UI"
 @onready var GravitateTimer: Timer = $GravitateTimer
@@ -31,9 +31,16 @@ var multi_mesh_instances: Array[MultiMeshInstance2D] = []
 @onready var cell_assets = [
 	load("res://assets/img/Cell-T0.svg"),
 	load("res://assets/img/Cell-T1.svg"),
-	load("res://assets/img/Cell-T2.svg"),
-	load("res://assets/img/Cell-T3.svg"),
-	load("res://assets/img/Cell-T4.svg"),
+	load("res://assets/img/T2.svg"),
+	load("res://assets/img/T3.svg"),
+	load("res://assets/img/T4.svg"),
+]
+@onready var cell_assets_layer2 = [
+	null,
+	null,
+	load("res://assets/img/T2 core.svg"),
+	load("res://assets/img/T3 core.svg"),
+	load("res://assets/img/T4 core.svg"),
 ]
 
 
@@ -52,8 +59,9 @@ func _ready():
 	
 	# Create Multi-Mesh-Instance-2D for drawing
 	for kind in range(Cell.NB_TYPES):
+		
 		var multi_mesh_instance = MultiMeshInstance2D.new()
-		multi_mesh_instance.z_index = -1
+		multi_mesh_instance.z_index = -2
 		var multi_mesh = MultiMesh.new()
 		var mesh = QuadMesh.new()
 		mesh.size = Utils.h * Vector2.ONE * Cell.SIZE[kind]
@@ -63,24 +71,76 @@ func _ready():
 		multi_mesh_instance.texture = cell_assets[kind]
 		multi_mesh_instances.append(multi_mesh_instance)
 		$".".add_child(multi_mesh_instance)
-	update_multi_mesh_instances()
+		
+		var multi_mesh_instance_layer2 = MultiMeshInstance2D.new()
+		multi_mesh_instance_layer2.z_index = -1
+		var multi_mesh_layer2 = MultiMesh.new()
+		var mesh_layer2 = QuadMesh.new()
+		mesh_layer2.size = Utils.h / 2 * Vector2.ONE * Cell.SIZE[kind]
+		multi_mesh_layer2.mesh = mesh_layer2
+		if cell_assets_layer2[kind] != null:
+			multi_mesh_layer2.instance_count = Cell.INSTANCE_COUNT[kind]
+		multi_mesh_instance_layer2.multimesh = multi_mesh_layer2
+		if cell_assets_layer2[kind] != null:
+			multi_mesh_instance_layer2.texture = cell_assets_layer2[kind]
+		multi_mesh_instances_layer2.append(multi_mesh_instance_layer2)
+		$".".add_child(multi_mesh_instance_layer2)
+	update_multi_mesh_instances(0.1)
 
 
-func update_multi_mesh_instances():
+func update_multi_mesh_instances(delta: float):
 	for kind in range(Cell.NB_TYPES):
 		var nb_instances = cells[kind].size()
 		multi_mesh_instances[kind].multimesh.visible_instance_count = nb_instances
+		if cell_assets_layer2[kind] != null:
+			multi_mesh_instances_layer2[kind].multimesh.visible_instance_count = nb_instances
 		for i in nb_instances:
 			var cell = cells[kind][i]
+			cell.t += delta * (randf() + 0.5)
+			var t = cell.t
 			var pos = Utils.tile_to_pos(cell.center)
-			var mesh_transform = Transform2D(PI, Vector2.ONE, 0.0, pos)
-			multi_mesh_instances[kind].multimesh.set_instance_transform_2d(i, mesh_transform)
+			var skew = Vector2.ONE
+			var angle = PI
+			match kind:
+				0:
+					skew = Vector2.ONE * (0.03 * sin(t * 2 * TAU) + 1.02)
+					angle = t
+				1:
+					skew = Vector2.ONE * (0.03 * sin((t + 0.4) * 0.8 * TAU) + 1.02)
+					angle = sin(t * 0.8 * PI) / 8
+				2:
+					skew = Vector2.ONE * (0.04 * sin(t * TAU) + 1.03)
+					angle = (sin(t * TAU) + sin(2 * t * TAU) / 3) / 16
+				3:
+					skew = Vector2.ONE * (0.03 * sin(t * PI) + 1.03)
+				4:
+					skew = Vector2.ONE * (0.02 * sin(t*2.5 * PI) + 1.01)
+					angle = (sin(t*2.5 * PI) + sin(2 * t*2.5 * PI) / 3) / 24
+			
+			multi_mesh_instances[kind].multimesh.set_instance_transform_2d(i, Transform2D(angle, skew, 0.0, pos))
+			
+			match kind:
+				0, 1:
+					continue
+				2:
+					skew = 1.1 * Vector2(
+						1.4 / (0.4 * max(0, sin((t + 0.15) * TAU) - sin((t + 0.15) * TAU * 3) / 3) + 1.4),
+						0.5 * (0.2 * max(0, sin((t + 0.15) * TAU) - sin((t + 0.15) * TAU * 3) / 3) + 1.2)
+						)
+					angle = PI / 2 * (1 + 2 * t + sin(t * TAU) + sin(2 * t * TAU) / 2 + sin(3 * t * TAU) / 12)
+				3:
+					skew = Vector2.ONE * (0.06 * sin(t * TAU) + 1)
+					angle = -PI / 1.8 + 0.1 * sin(t * PI / 3)
+					pos += Vector2.from_angle(t * PI) * 10
+				4:
+					skew = Vector2(0.9, 1) * 0.82 *  (0.3 * max(0, sin((t*2.5 + 0.4) * PI) - sin((t*2.5 + 0.4) * 3 * PI) / 3) + 1.3)
+					angle = PI * (0.46 + t*2.5 + sin(t*2.5 * PI) * 3 / 4 + sin(2 * t*2.5 * PI) / 3 + sin(3 * t*2.5 * PI) / 18)
+			
+			multi_mesh_instances_layer2[kind].multimesh.set_instance_transform_2d(i, Transform2D(angle, skew, 0.0, pos))
 
 
 func _process(delta: float):
-	t += delta
-	
-	update_multi_mesh_instances()
+	update_multi_mesh_instances(delta)
 	queue_redraw()
 	
 	# Camera zoom
@@ -162,9 +222,9 @@ func factory():
 		$PopT1.play()
 	for cell in cells.duplicate()[4]:
 		await get_tree().create_timer(randf_range(0.05, 0.25)).timeout
-		spawn_cell(cell.center, 2)
+		spawn_cell(cell.center, 0)
 		await get_tree().create_timer(randf_range(0.05, 0.15)).timeout
-		spawn_cell(cell.center, 2)
+		spawn_cell(cell.center, 1)
 		$PopT1.play()
 
 
@@ -206,14 +266,13 @@ func merge(cells_to_merge: Array[Cell]):
 
 
 func spawn_cell(source_coords: Vector2i, kind: int):
+	if kind >= Cell.NB_TYPES:
+		printerr("Cannot spawn a cell that big !")
+		return
 	var dist_to_center = Vector2(source_coords - CENTER)
-	var spawn_dir
+	var spawn_dir = Utils.angle_to_direction(rad_to_deg(dist_to_center.angle()) + (randf() - 0.5) * 100)
 	var current_center = source_coords
 	while true:
-		if dist_to_center.length_squared() < 10:
-			spawn_dir = randi() % 6 # Choose 1 of 6 random directions (spawn_dir)
-		else:
-			spawn_dir = Utils.angle_to_direction(rad_to_deg(dist_to_center.angle()) + (randf() - 0.5) * 100)
 		var dir = randi_range(5, 7)
 		var pos = Utils.moved_in_dir(current_center, (spawn_dir + dir) % 6)
 		if not Utils.are_there_bigger_or_same_cells_around(pos, coords, kind, null):
@@ -232,6 +291,10 @@ func spawn_cell(source_coords: Vector2i, kind: int):
 				spawn_cell(new_cell.center, victim)
 			return
 		current_center = Utils.moved_in_dir(current_center, (spawn_dir + dir) % 6)
+		if dist_to_center.length_squared() < 10:
+			spawn_dir = randi() % 6 # Choose 1 of 6 random directions (spawn_dir)
+		else:
+			spawn_dir = Utils.angle_to_direction(rad_to_deg(dist_to_center.angle()) + (randf() - 0.5) * 100)
 
 
 ## Bouge une cellule vers le centre si possible

@@ -20,11 +20,11 @@ const INSTANCE_COUNT: Array[int] = [
 
 ## Nombre de cellule qu'il faut fusionner pour passer au type suivant
 const NB_CELL_FOR_MERGE: Array[int] = [ #[1, 1, 1, 1, 2]
-	12,
-	6,
-	12,
-	5,
-	15,
+	2, # 12
+	2, # 6
+	2, # 12
+	2, # 5,
+	2, # 15,
 ]
 
 ## Nombre de cellules à aparaitre au clique
@@ -72,15 +72,13 @@ var center: Vector2i
 var kind: int  # Anciennement "cell_type"
 var childs: Array[Vector2i]
 var can_merge: bool
-var rnd: Array[float]
+var rot_dir: float # -1 or +1
+var t: float = 0
 
 func _init(_center: Vector2i, _kind: int):
 	self.center = _center
 	self.kind = _kind
-	self.rnd = []
-	for _i in range(4):
-		self.rnd.append(randf())
-	
+	self.rot_dir = (randi_range(0, 1) - 0.5) * 2	
 	self.childs = Utils.get_childs(self.center, self.kind)
 	self.can_merge = false
 
