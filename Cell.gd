@@ -20,11 +20,11 @@ const INSTANCE_COUNT: Array[int] = [
 
 ## Nombre de cellule qu'il faut fusionner pour passer au type suivant
 const NB_CELL_FOR_MERGE: Array[int] = [ #[1, 1, 1, 1, 2]
-	2, # 12
-	2, # 6
-	2, # 12
-	2, # 5,
-	2, # 15,
+	12,
+	6,
+	12,
+	5,
+	15,
 ]
 
 ## Nombre de cellules à aparaitre au clique
