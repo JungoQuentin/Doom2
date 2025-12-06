@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 env:
-  GODOT_VERSION: 4.4
+  GODOT_VERSION: 4.5
   EXPORT_NAME: test-project
   TEMPLATE_PATH: /github/home/.local/share/godot/export_templates
   PROJECT_PATH: .
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: github-pages
     container:
-      image: barichello/godot-ci:4.4
+      image: barichello/godot-ci:4.5
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -39,7 +39,7 @@ jobs:
           mkdir -vp _site
           godot --headless --export-release "Web" _site/index.html
           apt-get -y update && apt-get -y install curl unzip zip
-          curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          curl -L -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
           unzip butler.zip
           chmod +x butler
           ./butler -V
